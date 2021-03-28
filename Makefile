@@ -9,15 +9,15 @@ WARNINGS := -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align \
 CSTD := c17
 CFLAGS := -O3 -std=$(CSTD) $(WARNINGS)
 
-.PHONY: clean
+.PHONY: clean test
 
 all: btb
 
-btb: btb.o
-	gcc $(CFLAGS) -o $(TARGET) $(SRC_DIR)/main.c btb.o
+btb: btb.o $(SRC_DIR)/main.c
+	@ gcc $(CFLAGS) -o $(TARGET) $?
 
 btb.o: $(SRC_DIR)/btb.c
-	gcc $(CFLAGS) -c $(SRC_DIR)/btb.c
+	@ gcc $(CFLAGS) -c $?
 
 clean:
-	$(RM) btb btb-test *.o
+	@ $(RM) btb btb-test *.o
