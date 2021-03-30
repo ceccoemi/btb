@@ -15,14 +15,14 @@ CFLAGS := -O3 -std=$(CSTD) $(WARNINGS)
 
 all: test $(TARGET)
 
-$(TARGET): btb.o $(SRC_DIR)/main.c
+$(TARGET): bencode.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $?
 
-test: btb.o $(TEST_DIR)/btb_test.c
+test: bencode.o $(TEST_DIR)/btb_test.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $?
 	@ ./$(TARGET_TEST)
 
-btb.o: $(SRC_DIR)/btb.c
+bencode.o: $(SRC_DIR)/bencode.c
 	@ $(CC) $(CFLAGS) -c $?
 
 clean:

@@ -56,3 +56,5 @@ build/
 # targets
 btb
 btb-test
+# torrent test files
+*.torrent
