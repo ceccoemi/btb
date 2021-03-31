@@ -1,16 +1,22 @@
 #pragma once
 
+#define TOKENIZER_OK 0
+#define TOKENIZER_END 1
+#define TOKENIZER_MALFORMED_STRING 2
+
 typedef struct
 {
   // hold the entire string to tokenize
   char* data;
   // point to the char from which the next next() call is executed
   char* current;
+  // token found when next() is called
+  char* token;
 } tokenizer;
 
-tokenizer* create_tokenizer(const char* data);
+tokenizer* init_tokenizer(const char* data);
 
-void destroy_tokenizer(tokenizer* t);
+void free_tokenizer(tokenizer* t);
 
-char* next(tokenizer* t);
+int next(tokenizer* t);
 

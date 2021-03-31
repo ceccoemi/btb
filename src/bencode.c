@@ -1,46 +1,52 @@
 #include "bencode.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-tokenizer *create_tokenizer(const char *data)
+tokenizer *init_tokenizer(const char *data)
 {
   tokenizer *t = malloc(sizeof(tokenizer));
   t->data = malloc(strlen(data) + 1);
   strcpy(t->data, data);
   t->current = t->data;
+  t->token = malloc(strlen(data) + 1);
   return t;
 }
 
-void destroy_tokenizer(tokenizer *t)
+void free_tokenizer(tokenizer *t)
 {
   free(t->data);
-  // t->current point to the same memory location of t->data, no need to free it
+  // t->current points to the same memory location of t->data, no need free
+  free(t->token);
   free(t);
 }
 
-char *next(tokenizer *t)
+int next(tokenizer *t)
 {
   if (*t->current == '\0') {
-    return NULL;
+    return TOKENIZER_END;
   }
   if (*t->current == 'i' || *t->current == 'e') {
-    char *rst = malloc(2);
-    strncpy(rst, t->current, 1);
+    strncpy(t->token, t->current, 1);
+    // strncpy isn't safe. Use strlcpy instead?
+    t->token[1] = '\0';
+    assert(t->token[1] == '\0');
     t->current++;
-    return rst;
+    return TOKENIZER_OK;
   }
   char *p = t->current;
-  while (isdigit(*p)) {
+  while (isdigit(*p) || *p == '-') {
     if (*p == '\0') {
-      return NULL;  // ERROR: malformed string
+      return TOKENIZER_MALFORMED_STRING;
     }
     p++;
   }
-  char *rst = malloc(p - t->current + 1);
-  strncpy(rst, t->current, p - t->current);
+  strncpy(t->token, t->current, p - t->current);
+  // strncpy isn't safe. Use strlcpy instead?
+  t->token[p - t->current] = '\0';
   t->current = p;
-  return rst;
+  return TOKENIZER_OK;
 }
