@@ -12,16 +12,24 @@ tokenizer *init_tokenizer(const char *data)
   t->data = malloc(strlen(data) + 1);
   strcpy(t->data, data);
   t->current = t->data;
-  t->token = malloc(strlen(data) + 1);
   return t;
 }
 
 void free_tokenizer(tokenizer *t)
 {
   free(t->data);
-  // t->current points to the same memory location of t->data, no need free
-  free(t->token);
+  // t->current points to the same memory location of t->data, no need to free
+  if (t->token != NULL) {
+    free(t->token);
+  }
   free(t);
+}
+
+void copy_token(tokenizer *t, size_t len)
+{
+  t->token = realloc(t->token, len + 1);
+  strncpy(t->token, t->current, len);
+  t->token[len] = '\0';
 }
 
 int next(tokenizer *t)
@@ -30,10 +38,7 @@ int next(tokenizer *t)
     return TOKENIZER_END;
   }
   if (*t->current == 'i' || *t->current == 'e') {
-    strncpy(t->token, t->current, 1);
-    // strncpy isn't safe. Use strlcpy instead?
-    t->token[1] = '\0';
-    assert(t->token[1] == '\0');
+    copy_token(t, 1);
     t->current++;
     return TOKENIZER_OK;
   }
@@ -44,9 +49,7 @@ int next(tokenizer *t)
     }
     p++;
   }
-  strncpy(t->token, t->current, p - t->current);
-  // strncpy isn't safe. Use strlcpy instead?
-  t->token[p - t->current] = '\0';
+  copy_token(t, p - t->current);
   t->current = p;
   return TOKENIZER_OK;
 }
