@@ -26,4 +26,4 @@ bencode.o: $(SRC_DIR)/bencode.c
 	@ $(CC) $(CFLAGS) -c $?
 
 clean:
-	@ $(RM) btb btb-test *.o
+	@ $(RM) $(TARGET) $(TARGET_TEST) *.o

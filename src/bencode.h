@@ -15,9 +15,11 @@ typedef struct tokenizer
   // token found when next() is called
   char* token;
   // pointer to a function that represents a tokenizer status
-  int (*status_fn)(struct tokenizer*);
+  int (*_status_fn)(struct tokenizer*);
   // length of the next string to parse with next()
-  size_t strlen;
+  long int _strlen;
+  // number of lists parsed and not closed
+  int _list_stack;
 } tokenizer;
 
 tokenizer* init_tokenizer(const char* data);
