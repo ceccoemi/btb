@@ -24,6 +24,8 @@ int tokenize_str_start(tokenizer *);
 int tokenize_str_parse(tokenizer *);
 int tokenize_list_start(tokenizer *);
 int tokenize_list_end(tokenizer *);
+// int tokenize_dict_start(tokenizer *);
+// int tokenize_dict_end(tokenizer *);
 
 int tokenize_start(tokenizer *t)
 {
@@ -33,6 +35,8 @@ int tokenize_start(tokenizer *t)
     t->_status_fn = &tokenize_str_start;
   } else if (*t->current == 'l') {
     t->_status_fn = &tokenize_list_start;
+    //} else if (*t->current == 'd') {
+    // t->_status_fn = &tokenize_dict_start;
   } else if (*t->current == 'e') {
     t->_status_fn = &tokenize_list_end;
   } else if (*t->current == '\0') {
