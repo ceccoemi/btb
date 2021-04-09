@@ -5,13 +5,9 @@
 
 #include "../src/bencode.h"
 
-void test_tokenize_int(void)
+void test_tokenization(tokenizer *t, const char *want[], int num_tokens)
 {
-  char input_str[] = "i8ei-450e";
-  tokenizer *t = init_tokenizer(input_str);
-
-  const char *want[6] = {"i", "8", "e", "i", "-450", "e"};
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < num_tokens; i++) {
     int err = next(t);
     if (err != TOKENIZER_OK) {
       fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
@@ -30,7 +26,15 @@ void test_tokenize_int(void)
             TOKENIZER_END);
     return;
   }
+}
 
+void test_tokenize_int(void)
+{
+  char input_str[] = "i8ei-450e";
+  tokenizer *t = init_tokenizer(input_str);
+
+  const char *want[6] = {"i", "8", "e", "i", "-450", "e"};
+  test_tokenization(t, want, 6);
   free_tokenizer(t);
 }
 
@@ -40,26 +44,7 @@ void test_tokenize_str(void)
   tokenizer *t = init_tokenizer(input_str);
 
   const char *want[4] = {"s", "hi", "s", "mystring"};
-  for (int i = 0; i < 4; i++) {
-    int err = next(t);
-    if (err != TOKENIZER_OK) {
-      fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      return;
-    }
-    if (strcmp(t->token, want[i]) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
-      return;
-    }
-  }
-
-  int err = next(t);
-  if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
-    return;
-  }
-
+  test_tokenization(t, want, 4);
   free_tokenizer(t);
 }
 
@@ -69,26 +54,7 @@ void test_tokenize_int_str(void)
   tokenizer *t = init_tokenizer(input_str);
 
   const char *want[5] = {"i", "34", "e", "s", "holaholabb"};
-  for (int i = 0; i < 5; i++) {
-    int err = next(t);
-    if (err != TOKENIZER_OK) {
-      fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      return;
-    }
-    if (strcmp(t->token, want[i]) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
-      return;
-    }
-  }
-
-  int err = next(t);
-  if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
-    return;
-  }
-
+  test_tokenization(t, want, 5);
   free_tokenizer(t);
 }
 
@@ -98,26 +64,7 @@ void test_tokenize_list(void)
   tokenizer *t = init_tokenizer(input_str);
 
   const char *want[7] = {"l", "s", "spam", "i", "7", "e", "e"};
-  for (int i = 0; i < 7; i++) {
-    int err = next(t);
-    if (err != TOKENIZER_OK) {
-      fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      return;
-    }
-    if (strcmp(t->token, want[i]) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
-      return;
-    }
-  }
-
-  int err = next(t);
-  if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
-    return;
-  }
-
+  test_tokenization(t, want, 7);
   free_tokenizer(t);
 }
 
@@ -127,26 +74,7 @@ void test_tokenize_nested_list(void)
   tokenizer *t = init_tokenizer(input_str);
 
   const char *want[7] = {"l", "l", "i", "-23", "e", "e", "e"};
-  for (int i = 0; i < 7; i++) {
-    int err = next(t);
-    if (err != TOKENIZER_OK) {
-      fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      return;
-    }
-    if (strcmp(t->token, want[i]) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
-      return;
-    }
-  }
-
-  int err = next(t);
-  if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
-    return;
-  }
-
+  test_tokenization(t, want, 7);
   free_tokenizer(t);
 }
 
@@ -157,26 +85,7 @@ void test_tokenize_dict(void)
 
   const char *want[15] = {"d", "l", "i",  "-23", "e", "d", "s", "spam",
                           "l", "s", "hi", "e",   "e", "e", "e"};
-  for (int i = 0; i < 15; i++) {
-    int err = next(t);
-    if (err != TOKENIZER_OK) {
-      fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      return;
-    }
-    if (strcmp(t->token, want[i]) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
-      return;
-    }
-  }
-
-  int err = next(t);
-  if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
-    return;
-  }
-
+  test_tokenization(t, want, 15);
   free_tokenizer(t);
 }
 
