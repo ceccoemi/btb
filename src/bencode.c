@@ -22,10 +22,8 @@ int tokenize_int_parse(tokenizer *);
 int tokenize_int_end(tokenizer *);
 int tokenize_str_start(tokenizer *);
 int tokenize_str_parse(tokenizer *);
-int tokenize_list_start(tokenizer *);
-int tokenize_list_end(tokenizer *);
-// int tokenize_dict_start(tokenizer *);
-// int tokenize_dict_end(tokenizer *);
+int tokenize_list_dict_start(tokenizer *);
+int tokenize_list_dict_end(tokenizer *);
 
 int tokenize_start(tokenizer *t)
 {
@@ -33,15 +31,13 @@ int tokenize_start(tokenizer *t)
     t->_status_fn = &tokenize_int_start;
   } else if (isdigit(*t->current)) {
     t->_status_fn = &tokenize_str_start;
-  } else if (*t->current == 'l') {
-    t->_status_fn = &tokenize_list_start;
-    //} else if (*t->current == 'd') {
-    // t->_status_fn = &tokenize_dict_start;
+  } else if (*t->current == 'l' || *t->current == 'd') {
+    t->_status_fn = &tokenize_list_dict_start;
   } else if (*t->current == 'e') {
-    t->_status_fn = &tokenize_list_end;
+    t->_status_fn = &tokenize_list_dict_end;
   } else if (*t->current == '\0') {
-    if (t->_list_stack > 0) {
-      // There are some opened lists
+    if (t->_list_dict_stack > 0) {
+      // There are some opened lists/dicts
       t->_status_fn = &tokenize_error;
     } else {
       // Correct termination
@@ -124,12 +120,12 @@ int tokenize_str_parse(tokenizer *t)
   return TOKENIZER_OK;
 }
 
-int tokenize_list_start(tokenizer *t)
+int tokenize_list_dict_start(tokenizer *t)
 {
-  if (*t->current == 'l') {
+  if (*t->current == 'l' || *t->current == 'd') {
     copy_token(t, 1);
     t->current++;
-    t->_list_stack++;
+    t->_list_dict_stack++;
     t->_status_fn = &tokenize_start;
     return TOKENIZER_OK;
   }
@@ -137,16 +133,16 @@ int tokenize_list_start(tokenizer *t)
   return t->_status_fn(t);
 }
 
-int tokenize_list_end(tokenizer *t)
+int tokenize_list_dict_end(tokenizer *t)
 {
-  if (t->_list_stack < 0) {
-    // There wasn't opened lists
+  if (t->_list_dict_stack < 0) {
+    // There wasn't opened lists/dicts
     t->_status_fn = &tokenize_error;
   }
   if (*t->current == 'e') {
     copy_token(t, 1);
     t->current++;
-    t->_list_stack--;
+    t->_list_dict_stack--;
     t->_status_fn = &tokenize_start;
     return TOKENIZER_OK;
   }
@@ -163,7 +159,7 @@ tokenizer *init_tokenizer(const char *data)
   t->token = NULL;
   t->_status_fn = &tokenize_start;
   t->_strlen = 0;
-  t->_list_stack = 0;
+  t->_list_dict_stack = 0;
   return t;
 }
 

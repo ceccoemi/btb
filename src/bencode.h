@@ -18,8 +18,8 @@ typedef struct tokenizer
   int (*_status_fn)(struct tokenizer*);
   // length of the next string to parse with next()
   long int _strlen;
-  // number of lists parsed and not closed
-  int _list_stack;
+  // number of lists and/or dict parsed and not closed
+  int _list_dict_stack;
 } tokenizer;
 
 tokenizer* init_tokenizer(const char* data);

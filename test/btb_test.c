@@ -152,12 +152,12 @@ void test_tokenize_nested_list(void)
 
 void test_tokenize_dict(void)
 {
-  char input_str[] = "dli-23ed4:spameee";
+  char input_str[] = "dli-23ed4:spaml2:hieeee";
   tokenizer *t = init_tokenizer(input_str);
 
-  const char *want[11] = {"d", "l",    "i", "-23", "e", "d",
-                          "s", "spam", "e", "e",   "e"};
-  for (int i = 0; i < 11; i++) {
+  const char *want[15] = {"d", "l", "i",  "-23", "e", "d", "s", "spam",
+                          "l", "s", "hi", "e",   "e", "e", "e"};
+  for (int i = 0; i < 15; i++) {
     int err = next(t);
     if (err != TOKENIZER_OK) {
       fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
@@ -193,7 +193,7 @@ int main(void)
   test_tokenize_list();
   fprintf(stdout, "\ttest_tokenize_nested_list\n");
   test_tokenize_nested_list();
-  // fprintf(stdout, "\ttest_tokenize_dict\n");
-  // test_tokenize_dict();
+  fprintf(stdout, "\ttest_tokenize_dict\n");
+  test_tokenize_dict();
   fprintf(stdout, "done\n");
 }
