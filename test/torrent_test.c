@@ -16,7 +16,7 @@ void test_torrent_file()
     return;
   }
   char want_announce[] = "http://bttracker.debian.org:6969/announce";
-  if (memcmp(t->announce, want_announce, t->announce_size)) {
+  if (strcmp(t->announce, want_announce)) {
     fprintf(stderr, "wrong announce: got %s, want %s\n", t->announce,
             want_announce);
     free_torrent(t);

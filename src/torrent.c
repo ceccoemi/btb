@@ -75,9 +75,9 @@ int parse_torrent_file(torrent *tr, const char *fname)
         exit_code = TORRENT_ERROR;
         break;
       }
-      tr->announce = realloc(tr->announce, tk->token_size);
+      tr->announce = realloc(tr->announce, tk->token_size + 1);
       memcpy(tr->announce, tk->token, tk->token_size);
-      tr->announce_size = tk->token_size;
+      tr->announce[tk->token_size] = '\0';
       /* ------------------------ */
     }
   }

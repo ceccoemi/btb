@@ -3,14 +3,13 @@
 
 typedef struct torrent
 {
-  long int announce_size;
-  char *announce;
-  char *comment;
+  char *announce;  // null-terminated string
+  char *comment;   // null-terminated string
   char *info_hash;
   char **piece_hashes;
   int piece_length;
   int length;
-  char *name;
+  char *name;  // null-terminated string
 } torrent;
 
 // Allocate the memory for a torrent
