@@ -18,9 +18,12 @@ all: test $(TARGET)
 $(TARGET): bencode.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $?
 
-test: bencode.o $(TEST_DIR)/btb_test.c
+test: bencode.o bencode_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $?
 	@ ./$(TARGET_TEST)
+
+bencode_test.o: $(TEST_DIR)/bencode_test.c
+	@ $(CC) $(CFLAGS) -c $?
 
 bencode.o: $(SRC_DIR)/bencode.c
 	@ $(CC) $(CFLAGS) -c $?
