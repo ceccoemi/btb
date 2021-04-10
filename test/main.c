@@ -5,10 +5,12 @@
 
 #include "../src/bencode.h"
 #include "bencode_test.h"
+#include "torrent_test.h"
 
 int main(void)
 {
   fprintf(stdout, "Running tests...\n");
+
   fprintf(stdout, "\ttest_tokenize_int\n");
   test_tokenize_int();
   fprintf(stdout, "\ttest_tokenize_str\n");
@@ -21,5 +23,9 @@ int main(void)
   test_tokenize_nested_list();
   fprintf(stdout, "\ttest_tokenize_dict\n");
   test_tokenize_dict();
+
+  fprintf(stdout, "\ttest_torrent_file\n");
+  test_torrent_file();
+
   fprintf(stdout, "done\n");
 }
