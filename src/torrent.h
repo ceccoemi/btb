@@ -7,8 +7,8 @@ typedef struct torrent
   char *comment;   // null-terminated string
   char *info_hash;
   char **piece_hashes;
-  int piece_length;
-  int length;
+  long long piece_length;
+  long long length;
   char *name;  // null-terminated string
 } torrent;
 

@@ -55,7 +55,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
       exit_code = TORRENT_ERROR;
       break;
     }
-    if (memcmp(tk->token, "announce", tk->token_size) == 0) {
+    if (memcmp(tk->token, "announce", strlen("announce")) == 0) {
       /* --- parse announce --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -64,7 +64,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
         break;
       }
       if (memcmp(tk->token, "s", tk->token_size) != 0) {
-        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        fprintf(stderr, "expected s token, got %.*s\n", (int)tk->token_size, tk->token);
         exit_code = TORRENT_ERROR;
         break;
       }
@@ -78,7 +78,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
       memcpy(tr->announce, tk->token, tk->token_size);
       tr->announce[tk->token_size] = '\0';
       /* ------------------------ */
-    } else if (memcmp(tk->token, "comment", tk->token_size) == 0) {
+    } else if (memcmp(tk->token, "comment", strlen("comment")) == 0) {
       /* --- parse comment --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -87,7 +87,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
         break;
       }
       if (memcmp(tk->token, "s", tk->token_size) != 0) {
-        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        fprintf(stderr, "expected s token, got %.*s\n", (int)tk->token_size, tk->token);
         exit_code = TORRENT_ERROR;
         break;
       }
@@ -101,8 +101,8 @@ int parse_torrent_file(torrent *tr, const char *fname)
       memcpy(tr->comment, tk->token, tk->token_size);
       tr->comment[tk->token_size] = '\0';
       /* ------------------------ */
-    } else if (memcmp(tk->token, "name", tk->token_size) == 0) {
-      /* --- parse comment --- */
+    } else if (memcmp(tk->token, "name", strlen("name")) == 0) {
+      /* --- parse name --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
         fprintf(stderr, "tokenizer failed with code %d\n", err);
@@ -110,7 +110,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
         break;
       }
       if (memcmp(tk->token, "s", tk->token_size) != 0) {
-        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        fprintf(stderr, "expected s token, got %.*s\n", (int)tk->token_size, tk->token);
         exit_code = TORRENT_ERROR;
         break;
       }
@@ -123,6 +123,30 @@ int parse_torrent_file(torrent *tr, const char *fname)
       tr->name = realloc(tr->name, tk->token_size + 1);
       memcpy(tr->name, tk->token, tk->token_size);
       tr->name[tk->token_size] = '\0';
+      /* ------------------------ */
+    } else if (memcmp(tk->token, "length", strlen("length")) == 0) {
+      /* --- parse length --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "i", tk->token_size) != 0) {
+        fprintf(stderr, "expected i token, got %.*s\n", (int)tk->token_size, tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      char *num = malloc(tk->token_size + 1);
+      memcpy(num, tk->token, tk->token_size);
+      num[tk->token_size] = '\0';
+      tr->length = strtoll(num, NULL, 10);
       /* ------------------------ */
     }
   }

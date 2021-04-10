@@ -28,6 +28,11 @@ void test_torrent_file()
     fprintf(stderr, "wrong name: got %s, want %s\n", t->name, want_name);
     goto exit;
   }
+  long long want_length = 353370112;
+  if (t->length != want_length) {
+    fprintf(stderr, "wrong length: got %lld, want %lld\n", t->length, want_length);
+    goto exit;
+  }
 exit:
   free_torrent(t);
 }
