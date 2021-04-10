@@ -6,14 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* copy a substr of size len from tokenizer->current into t->token */
-void copy_token(tokenizer *t, size_t len)
-{
-  t->token = realloc(t->token, len + 1);
-  strncpy(t->token, t->current, len);
-  t->token[len] = '\0';
-}
-
 int tokenize_start(tokenizer *);
 int tokenize_end(tokenizer *);
 int tokenize_error(tokenizer *);
@@ -35,7 +27,7 @@ int tokenize_start(tokenizer *t)
     t->_status_fn = &tokenize_list_dict_start;
   } else if (*t->current == 'e') {
     t->_status_fn = &tokenize_list_dict_end;
-  } else if (*t->current == '\0') {
+  } else if (t->current - t->data == t->data_size) {
     if (t->_list_dict_stack > 0) {
       // There are some opened lists/dicts
       t->_status_fn = &tokenize_error;
@@ -52,19 +44,23 @@ int tokenize_start(tokenizer *t)
 int tokenize_end(tokenizer *t)
 {
   t->token = NULL;
+  t->token_size = 0;
   return TOKENIZER_END;
 }
 
 int tokenize_error(tokenizer *t)
 {
   t->token = NULL;
+  t->token_size = 0;
   return TOKENIZER_MALFORMED_STRING;
 }
 
 int tokenize_int_start(tokenizer *t)
 {
   if (*t->current == 'i') {
-    copy_token(t, 1);
+    t->token = realloc(t->token, 1);
+    memcpy(t->token, t->current, 1);
+    t->token_size = 1;
     t->current++;
     t->_status_fn = &tokenize_int_parse;
     return TOKENIZER_OK;
@@ -76,10 +72,15 @@ int tokenize_int_start(tokenizer *t)
 int tokenize_int_parse(tokenizer *t)
 {
   char *p = t->current;
-  while (isdigit(*p) || *p == '-') {
+  if (isdigit(*p) || *p == '-') {
     p++;
   }
-  copy_token(t, p - t->current);
+  while (isdigit(*p)) {
+    p++;
+  }
+  t->token = realloc(t->token, p - t->current);
+  memcpy(t->token, t->current, p - t->current);
+  t->token_size = p - t->current;
   t->current = p;
   t->_status_fn = &tokenize_int_end;
   return TOKENIZER_OK;
@@ -88,7 +89,9 @@ int tokenize_int_parse(tokenizer *t)
 int tokenize_int_end(tokenizer *t)
 {
   if (*t->current == 'e') {
-    copy_token(t, 1);
+    t->token = realloc(t->token, 1);
+    memcpy(t->token, t->current, 1);
+    t->token_size = 1;
     t->current++;
     t->_status_fn = &tokenize_start;
     return TOKENIZER_OK;
@@ -105,17 +108,19 @@ int tokenize_str_start(tokenizer *t)
     return t->_status_fn(t);
   }
   t->current++;  // skip ':'
-  t->token = realloc(t->token, 2);
-  strcpy(t->token, "s");
+  t->token = realloc(t->token, 1);
+  memcpy(t->token, "s", 1);
+  t->token_size = 1;
   t->_status_fn = &tokenize_str_parse;
   return TOKENIZER_OK;
 }
 
 int tokenize_str_parse(tokenizer *t)
 {
-  copy_token(t, t->_strlen);
+  t->token = realloc(t->token, t->_strlen);
+  memcpy(t->token, t->current, t->_strlen);
+  t->token_size = t->_strlen;
   t->current += t->_strlen;
-  t->_strlen = 0;
   t->_status_fn = &tokenize_start;
   return TOKENIZER_OK;
 }
@@ -123,7 +128,9 @@ int tokenize_str_parse(tokenizer *t)
 int tokenize_list_dict_start(tokenizer *t)
 {
   if (*t->current == 'l' || *t->current == 'd') {
-    copy_token(t, 1);
+    t->token = realloc(t->token, 1);
+    memcpy(t->token, t->current, 1);
+    t->token_size = 1;
     t->current++;
     t->_list_dict_stack++;
     t->_status_fn = &tokenize_start;
@@ -140,7 +147,9 @@ int tokenize_list_dict_end(tokenizer *t)
     t->_status_fn = &tokenize_error;
   }
   if (*t->current == 'e') {
-    copy_token(t, 1);
+    t->token = realloc(t->token, 1);
+    memcpy(t->token, t->current, 1);
+    t->token_size = 1;
     t->current++;
     t->_list_dict_stack--;
     t->_status_fn = &tokenize_start;
@@ -150,12 +159,14 @@ int tokenize_list_dict_end(tokenizer *t)
   return t->_status_fn(t);
 }
 
-tokenizer *init_tokenizer(const char *data)
+tokenizer *init_tokenizer(const char *data, long unsigned data_size)
 {
   tokenizer *t = malloc(sizeof(tokenizer));
-  t->data = malloc(strlen(data) + 1);
-  strcpy(t->data, data);
+  t->data_size = data_size;
+  t->data = malloc(data_size);
+  memcpy(t->data, data, data_size);
   t->current = t->data;
+  t->token_size = 0;
   t->token = NULL;
   t->_status_fn = &tokenize_start;
   t->_strlen = 0;

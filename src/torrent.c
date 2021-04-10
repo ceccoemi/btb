@@ -1,7 +1,9 @@
 #include "torrent.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bencode.h"
 
@@ -24,13 +26,13 @@ int parse_torrent_file(torrent *tr, const char *fname)
   // This fails if the file is > 4GB, but it's not our case.
   FILE *f = fopen(fname, "rb");
   if (f == NULL) {
-    fprintf(stderr, "error in opening the file %s\n", fname);
+    fprintf(stderr, "Error in opening the file %s\n", fname);
     return TORRENT_ERROR;
   }
   fseek(f, 0, SEEK_END);
   long length = ftell(f);
   fseek(f, 0, SEEK_SET);
-  char *buffer = malloc(length + 1);
+  char *buffer = malloc(length);
   long r = fread(buffer, 1, length, f);
   if (r != length) {
     fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length,
@@ -38,73 +40,50 @@ int parse_torrent_file(torrent *tr, const char *fname)
     free(buffer);
     return TORRENT_ERROR;
   }
-  buffer[length] = '\0';  // fread doesn't NULL-terminate the string
   fclose(f);
 
-  tokenizer *tk = init_tokenizer(buffer);
+  tokenizer *tk = init_tokenizer(buffer, length);
   free(buffer);
 
-  int err;
-
-  err = next(tk);
-  if (err != TOKENIZER_OK) {
-    fprintf(stderr, "tokenizer failed with code %d\n", err);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
+  int exit_code = TORRENT_OK;
+  while (true) {
+    int err = next(tk);
+    if (err == TOKENIZER_END) {
+      break;
+    }
+    if (err == TOKENIZER_MALFORMED_STRING) {
+      fprintf(stderr, "tokenizer failed with code %d\n", err);
+      exit_code = TORRENT_ERROR;
+      break;
+    }
+    if (memcmp(tk->token, "announce", tk->token_size) == 0) {
+      /* --- parse announce --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "s", tk->token_size) != 0) {
+        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      tr->announce = realloc(tr->announce, tk->token_size);
+      memcpy(tr->announce, tk->token, tk->token_size);
+      tr->announce_size = tk->token_size;
+      /* ------------------------ */
+    }
   }
-  if (strcmp(tk->token, "d") != 0) {
-    fprintf(stderr, "expected d token, got %s\n", tk->token);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-
-  err = next(tk);
-  if (err != TOKENIZER_OK) {
-    fprintf(stderr, "tokenizer failed with code %d\n", err);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-  if (strcmp(tk->token, "s") != 0) {
-    fprintf(stderr, "expected s token, got %s\n", tk->token);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-
-  err = next(tk);
-  if (err != TOKENIZER_OK) {
-    fprintf(stderr, "tokenizer failed with code %d\n", err);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-  if (strcmp(tk->token, "announce") != 0) {
-    fprintf(stderr, "expected announce token, got %s\n", tk->token);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-
-  err = next(tk);
-  if (err != TOKENIZER_OK) {
-    fprintf(stderr, "tokenizer failed with code %d\n", err);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-  if (strcmp(tk->token, "s") != 0) {
-    fprintf(stderr, "expected s token, got %s\n", tk->token);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-
-  err = next(tk);
-  if (err != TOKENIZER_OK) {
-    fprintf(stderr, "tokenizer failed with code %d\n", err);
-    free_tokenizer(tk);
-    return TORRENT_ERROR;
-  }
-  tr->announce = malloc(strlen(tk->token) + 1);
-  strcpy(tr->announce, tk->token);
 
   free_tokenizer(tk);
-  return TORRENT_OK;
+  return exit_code;
 }
 
 void free_torrent(torrent *t)

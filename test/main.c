@@ -23,6 +23,8 @@ int main(void)
   test_tokenize_nested_list();
   fprintf(stdout, "\ttest_tokenize_dict\n");
   test_tokenize_dict();
+  fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
+  test_tokenize_str_with_null_char();
 
   fprintf(stdout, "\ttest_torrent_file\n");
   test_torrent_file();

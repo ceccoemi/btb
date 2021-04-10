@@ -8,10 +8,12 @@
 
 typedef struct tokenizer
 {
-  // hold the entire string to tokenize
+  long int data_size;
+  // hold the entire data to tokenize
   char* data;
   // point to the char from which the next next() call is executed
   char* current;
+  long int token_size;
   // token found when next() is called
   char* token;
   // pointer to a function that represents a tokenizer status
@@ -22,7 +24,7 @@ typedef struct tokenizer
   int _list_dict_stack;
 } tokenizer;
 
-tokenizer* init_tokenizer(const char* data);
+tokenizer* init_tokenizer(const char* data, long unsigned data_size);
 
 void free_tokenizer(tokenizer* t);
 

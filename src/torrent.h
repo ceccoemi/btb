@@ -3,6 +3,7 @@
 
 typedef struct torrent
 {
+  long int announce_size;
   char *announce;
   char *comment;
   char *info_hash;
