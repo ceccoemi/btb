@@ -35,8 +35,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
   char *buffer = malloc(length);
   long r = fread(buffer, 1, length, f);
   if (r != length) {
-    fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length,
-            fname);
+    fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length, fname);
     free(buffer);
     return TORRENT_ERROR;
   }
@@ -78,6 +77,52 @@ int parse_torrent_file(torrent *tr, const char *fname)
       tr->announce = realloc(tr->announce, tk->token_size + 1);
       memcpy(tr->announce, tk->token, tk->token_size);
       tr->announce[tk->token_size] = '\0';
+      /* ------------------------ */
+    } else if (memcmp(tk->token, "comment", tk->token_size) == 0) {
+      /* --- parse comment --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "s", tk->token_size) != 0) {
+        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      tr->comment = realloc(tr->comment, tk->token_size + 1);
+      memcpy(tr->comment, tk->token, tk->token_size);
+      tr->comment[tk->token_size] = '\0';
+      /* ------------------------ */
+    } else if (memcmp(tk->token, "name", tk->token_size) == 0) {
+      /* --- parse comment --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "s", tk->token_size) != 0) {
+        fprintf(stderr, "expected s token, got %s\n", tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      tr->name = realloc(tr->name, tk->token_size + 1);
+      memcpy(tr->name, tk->token, tk->token_size);
+      tr->name[tk->token_size] = '\0';
       /* ------------------------ */
     }
   }

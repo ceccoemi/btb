@@ -1,5 +1,6 @@
 BasedOnStyle: Google
 BreakBeforeBraces: Custom
+ColumnLimit: 100
 BraceWrapping:
   AfterEnum: true
   AfterStruct: true

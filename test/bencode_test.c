@@ -7,8 +7,7 @@
 
 #include "bencode_test.h"
 
-void test_tokenization(char *input, long unsigned input_len, const char *want[],
-                       int num_tokens)
+void test_tokenization(char *input, long unsigned input_len, const char *want[], int num_tokens)
 {
   tokenizer *t = init_tokenizer(input, input_len);
   for (int i = 0; i < num_tokens; i++) {
@@ -19,8 +18,7 @@ void test_tokenization(char *input, long unsigned input_len, const char *want[],
       return;
     }
     if (memcmp(t->token, want[i], t->token_size) != 0) {
-      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token,
-              want[i]);
+      fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token, want[i]);
       free_tokenizer(t);
       return;
     }
@@ -28,8 +26,7 @@ void test_tokenization(char *input, long unsigned input_len, const char *want[],
 
   int err = next(t);
   if (err != TOKENIZER_END) {
-    fprintf(stderr, "final next failed: got %d error code, want %d\n", err,
-            TOKENIZER_END);
+    fprintf(stderr, "final next failed: got %d error code, want %d\n", err, TOKENIZER_END);
     return;
   }
   free_tokenizer(t);
