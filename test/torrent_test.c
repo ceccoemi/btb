@@ -1,11 +1,12 @@
 #include "../src/torrent.h"
 
+#include <openssl/sha.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "torrent_test.h"
 
-void test_torrent_file()
+void test_debian_torrent()
 {
   torrent *t = init_torrent();
   int err = parse_torrent_file(t, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
@@ -38,6 +39,21 @@ void test_torrent_file()
     fprintf(stderr, "wrong piece_length: got %lld, want %lld\n", t->piece_length,
             want_piece_length);
     goto exit;
+  }
+  long long want_num_pieces = 26960 / SHA_DIGEST_LENGTH;
+  if (t->num_pieces != want_num_pieces) {
+    fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
+    goto exit;
+  }
+  if (t->piece_hashes == NULL) {
+    fprintf(stderr, "piece_hashes is NULL\n");
+    goto exit;
+  }
+  for (long long i = 0; i < t->num_pieces; i++) {
+    if (t->piece_hashes[i] == NULL) {
+      fprintf(stderr, "%lld-th piece hash is NULL\n", i);
+      goto exit;
+    }
   }
 exit:
   free_torrent(t);

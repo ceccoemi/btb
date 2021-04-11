@@ -26,7 +26,7 @@ torrent_test.o: $(TEST_DIR)/torrent_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 torrent.o: $(SRC_DIR)/torrent.c
-	@ $(CC) $(CFLAGS) -c $?
+	@ $(CC) $(CFLAGS) -c $? -lcrypto
 
 bencode_test.o: $(TEST_DIR)/bencode_test.c
 	@ $(CC) $(CFLAGS) -c $?

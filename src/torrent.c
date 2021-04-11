@@ -1,5 +1,6 @@
 #include "torrent.h"
 
+#include <openssl/sha.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,8 +13,9 @@ torrent *init_torrent()
   torrent *t = malloc(sizeof(torrent));
   t->announce = NULL;
   t->comment = NULL;
-  t->info_hash = malloc(20 * sizeof(char *));     // SHA-1 hash is 20-byte-long
-  t->piece_hashes = malloc(20 * sizeof(char *));  // SHA-1 hash is 20-byte-long
+  t->info_hash = malloc(SHA_DIGEST_LENGTH * sizeof(char *));
+  t->num_pieces = 0;
+  t->piece_hashes = NULL;
   t->piece_length = 0;
   t->length = 0;
   t->name = NULL;
@@ -23,7 +25,7 @@ torrent *init_torrent()
 int parse_torrent_file(torrent *tr, const char *fname)
 {
   // Read the entire file in a buffer.
-  // This fails if the file is > 4GB, but it's not our case.
+  // This fails if the file is > 4GB, but it's shouldn't be our case.
   FILE *f = fopen(fname, "rb");
   if (f == NULL) {
     fprintf(stderr, "Error in opening the file %s\n", fname);
@@ -171,6 +173,32 @@ int parse_torrent_file(torrent *tr, const char *fname)
       memcpy(num, tk->token, tk->token_size);
       num[tk->token_size] = '\0';
       tr->piece_length = strtoll(num, NULL, 10);
+      /* ------------------------ */
+    } else if (memcmp(tk->token, "pieces", strlen("pieces")) == 0) {
+      /* --- parse pieces --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "s", tk->token_size) != 0) {
+        fprintf(stderr, "expected s token, got %.*s\n", (int)tk->token_size, tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      tr->num_pieces = tk->token_size / SHA_DIGEST_LENGTH;
+      tr->piece_hashes = malloc(tr->num_pieces * sizeof(char *));
+      for (long long i = 0; i < tr->num_pieces; i++) {
+        tr->piece_hashes[i] = malloc(SHA_DIGEST_LENGTH);
+        memcpy(tr->piece_hashes[i], tk->token + SHA_DIGEST_LENGTH * i, SHA_DIGEST_LENGTH);
+      }
       /* ------------------------ */
     }
   }

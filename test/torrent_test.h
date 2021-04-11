@@ -1,1 +1,3 @@
-void test_torrent_file(void);
+void test_debian_torrent(void);
+
+void test_example_torrent(void);
