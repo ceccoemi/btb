@@ -148,6 +148,30 @@ int parse_torrent_file(torrent *tr, const char *fname)
       num[tk->token_size] = '\0';
       tr->length = strtoll(num, NULL, 10);
       /* ------------------------ */
+    } else if (memcmp(tk->token, "piece length", strlen("piece length")) == 0) {
+      /* --- parse piece length --- */
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "i", tk->token_size) != 0) {
+        fprintf(stderr, "expected i token, got %.*s\n", (int)tk->token_size, tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      char *num = malloc(tk->token_size + 1);
+      memcpy(num, tk->token, tk->token_size);
+      num[tk->token_size] = '\0';
+      tr->piece_length = strtoll(num, NULL, 10);
+      /* ------------------------ */
     }
   }
 

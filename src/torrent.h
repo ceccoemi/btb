@@ -15,7 +15,7 @@ typedef struct torrent
 // Allocate the memory for a torrent
 torrent *init_torrent(void);
 
-// Parse a .torrent file and return an error code.
+// Parse a .torrent file, fill the struct and return an error code.
 int parse_torrent_file(torrent *, const char *);
 
 // Free the memory of a torrent

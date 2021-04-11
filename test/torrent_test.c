@@ -33,6 +33,12 @@ void test_torrent_file()
     fprintf(stderr, "wrong length: got %lld, want %lld\n", t->length, want_length);
     goto exit;
   }
+  long long want_piece_length = 262144;
+  if (t->piece_length != want_piece_length) {
+    fprintf(stderr, "wrong piece_length: got %lld, want %lld\n", t->piece_length,
+            want_piece_length);
+    goto exit;
+  }
 exit:
   free_torrent(t);
 }
