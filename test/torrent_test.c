@@ -55,6 +55,10 @@ void test_debian_torrent()
       goto exit;
     }
   }
+  if (t->info_hash == NULL) {
+    fprintf(stderr, "info_hash is NULL\n");
+    goto exit;
+  }
 exit:
   free_torrent(t);
 }

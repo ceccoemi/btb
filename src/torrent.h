@@ -7,7 +7,7 @@ typedef struct torrent
   char *announce;  // null-terminated string
   char *comment;   // null-terminated string
   // SHA-1 hash of the info section
-  char *info_hash;
+  unsigned char *info_hash;
   // Size of each piece
   long long piece_length;
   // Number of pieces

@@ -13,7 +13,7 @@ torrent *init_torrent()
   torrent *t = malloc(sizeof(torrent));
   t->announce = NULL;
   t->comment = NULL;
-  t->info_hash = malloc(SHA_DIGEST_LENGTH * sizeof(char *));
+  t->info_hash = NULL;
   t->num_pieces = 0;
   t->piece_hashes = NULL;
   t->piece_length = 0;
@@ -47,6 +47,15 @@ int parse_torrent_file(torrent *tr, const char *fname)
   free(buffer);
 
   int exit_code = TORRENT_OK;
+  // Pointer to the location where the info section starts,
+  // which is the 'd' character after the 'info' key.
+  char *info_start = NULL;
+  // Value of the list_dict_stack when the key info is encountered.
+  // This value should be checked to identify the end of the info dictionary.
+  long info_start_stack_value = 0;
+  // Pointer to the location where the info section ends,
+  // which is the 'e' character.
+  char *info_end = NULL;
   while (true) {
     int err = next(tk);
     if (err == TOKENIZER_END) {
@@ -103,6 +112,32 @@ int parse_torrent_file(torrent *tr, const char *fname)
       memcpy(tr->comment, tk->token, tk->token_size);
       tr->comment[tk->token_size] = '\0';
       /* ------------------------ */
+    } else if (memcmp(tk->token, "info", strlen("info")) == 0) {
+      info_start = tk->current;
+      info_start_stack_value = tk->list_dict_stack;
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      if (memcmp(tk->token, "d", tk->token_size) != 0) {
+        fprintf(stderr, "expected d token, got %.*s\n", (int)tk->token_size, tk->token);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+    } else if (info_start != NULL && info_end == NULL &&
+               info_start_stack_value == tk->list_dict_stack &&
+               memcmp(tk->token, "e", strlen("e")) == 0) {
+      info_end = tk->current - 1;  // the tk->current pointer is one char over the 'e' char
+      err = next(tk);
+      if (err != TOKENIZER_OK) {
+        fprintf(stderr, "tokenizer failed with code %d\n", err);
+        exit_code = TORRENT_ERROR;
+        break;
+      }
+      tr->info_hash = malloc(SHA_DIGEST_LENGTH);
+      SHA1(info_start, info_end - info_start + 1, tr->info_hash);
     } else if (memcmp(tk->token, "name", strlen("name")) == 0) {
       /* --- parse name --- */
       err = next(tk);

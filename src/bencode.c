@@ -28,7 +28,7 @@ int tokenize_start(tokenizer *t)
   } else if (*t->current == 'e') {
     t->_status_fn = &tokenize_list_dict_end;
   } else if (t->current - t->data == t->data_size) {
-    if (t->_list_dict_stack > 0) {
+    if (t->list_dict_stack > 0) {
       // There are some opened lists/dicts
       t->_status_fn = &tokenize_error;
     } else {
@@ -132,7 +132,7 @@ int tokenize_list_dict_start(tokenizer *t)
     memcpy(t->token, t->current, 1);
     t->token_size = 1;
     t->current++;
-    t->_list_dict_stack++;
+    t->list_dict_stack++;
     t->_status_fn = &tokenize_start;
     return TOKENIZER_OK;
   }
@@ -142,7 +142,7 @@ int tokenize_list_dict_start(tokenizer *t)
 
 int tokenize_list_dict_end(tokenizer *t)
 {
-  if (t->_list_dict_stack < 0) {
+  if (t->list_dict_stack < 0) {
     // There wasn't opened lists/dicts
     t->_status_fn = &tokenize_error;
   }
@@ -151,7 +151,7 @@ int tokenize_list_dict_end(tokenizer *t)
     memcpy(t->token, t->current, 1);
     t->token_size = 1;
     t->current++;
-    t->_list_dict_stack--;
+    t->list_dict_stack--;
     t->_status_fn = &tokenize_start;
     return TOKENIZER_OK;
   }
@@ -170,7 +170,7 @@ tokenizer *init_tokenizer(const char *data, long unsigned data_size)
   t->token = NULL;
   t->_status_fn = &tokenize_start;
   t->_strlen = 0;
-  t->_list_dict_stack = 0;
+  t->list_dict_stack = 0;
   return t;
 }
 
