@@ -27,6 +27,9 @@ int tokenize_start(tokenizer *t)
     t->_status_fn = &tokenize_list_dict_start;
   } else if (*t->current == 'e') {
     t->_status_fn = &tokenize_list_dict_end;
+  } else if (isspace(*t->current)) {
+    // skip whitespaces
+    t->current++;
   } else if (t->current - t->data == t->data_size) {
     if (t->list_dict_stack > 0) {
       // There are some opened lists/dicts

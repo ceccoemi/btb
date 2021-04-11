@@ -6,6 +6,18 @@
 
 #include "torrent_test.h"
 
+void test_sample_torrent()
+{
+  torrent *t = init_torrent();
+  int err = parse_torrent_file(t, "test/data/sample.torrent");
+  if (err != TORRENT_OK) {
+    fprintf(stderr, "parsing failed: got error code %d\n", err);
+    goto exit;
+  }
+exit:
+  free_torrent(t);
+}
+
 void test_debian_torrent()
 {
   torrent *t = init_torrent();

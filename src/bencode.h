@@ -8,7 +8,7 @@
 
 typedef struct tokenizer
 {
-  long int data_size;
+  long long data_size;
   // hold the entire data to tokenize
   char* data;
   // point to the char from which the next next() call is executed

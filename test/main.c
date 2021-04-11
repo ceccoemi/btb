@@ -26,6 +26,8 @@ int main(void)
   fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
   test_tokenize_str_with_null_char();
 
+  fprintf(stdout, "\ttest_sample_torrent\n");
+  test_sample_torrent();
   fprintf(stdout, "\ttest_debian_torrent\n");
   test_debian_torrent();
 
