@@ -2,9 +2,12 @@
 
 #include <openssl/sha.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "torrent_test.h"
+
+#pragma GCC diagnostic ignored "-Wpointer-sign"
 
 void test_sample_torrent()
 {
@@ -12,9 +15,32 @@ void test_sample_torrent()
   int err = parse_torrent_file(t, "test/data/sample.torrent");
   if (err != TORRENT_OK) {
     fprintf(stderr, "parsing failed: got error code %d\n", err);
-    goto exit;
   }
-exit:
+  long long want_num_pieces = 3;
+  if (t->num_pieces != want_num_pieces) {
+    fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
+  }
+  char want_piece_hashes[3][SHA_DIGEST_LENGTH] = {
+      {'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
+       'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'},
+      {'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b',
+       'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b'},
+      {'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
+       'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'}};
+  for (long long i = 0; i < want_num_pieces; i++) {
+    if (memcmp(t->piece_hashes[i], want_piece_hashes[i], SHA_DIGEST_LENGTH) != 0) {
+      fprintf(stderr, "wrong %lld-th piece hash\n", i);
+    }
+  }
+  const char *info_dict =
+      "d6:lengthi20e4:name10:sample.txt12:piece "
+      "lengthi65536e6:pieces60:aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbcccccccccccccccccccc7:"
+      "privatei1ee";
+  unsigned char *want_hash_info = malloc(SHA_DIGEST_LENGTH);
+  SHA1(info_dict, strlen(info_dict), want_hash_info);
+  if (memcmp(t->info_hash, want_hash_info, SHA_DIGEST_LENGTH) != 0) {
+    fprintf(stderr, "wrong info_hash\n");
+  }
   free_torrent(t);
 }
 

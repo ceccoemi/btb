@@ -8,6 +8,8 @@
 
 #include "bencode.h"
 
+#pragma GCC diagnostic ignored "-Wpointer-sign"
+
 torrent *init_torrent()
 {
   torrent *t = malloc(sizeof(torrent));
