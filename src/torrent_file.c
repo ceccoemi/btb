@@ -1,4 +1,4 @@
-#include "torrent.h"
+#include "torrent_file.h"
 
 #include <openssl/sha.h>
 #include <stdbool.h>
@@ -10,9 +10,9 @@
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 
-torrent *init_torrent()
+torrent_file *init_torrent_file()
 {
-  torrent *t = malloc(sizeof(torrent));
+  torrent_file *t = malloc(sizeof(torrent_file));
   t->announce = NULL;
   t->comment = NULL;
   t->info_hash = NULL;
@@ -24,7 +24,7 @@ torrent *init_torrent()
   return t;
 }
 
-int parse_torrent_file(torrent *tr, const char *fname)
+int parse_torrent_file(torrent_file *tr, const char *fname)
 {
   // Read the entire file in a buffer.
   // This fails if the file is > 4GB, but it's shouldn't be our case.
@@ -40,6 +40,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
   long r = fread(buffer, 1, length, f);
   if (r != length) {
     fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length, fname);
+    fclose(f);
     free(buffer);
     return TORRENT_ERROR;
   }
@@ -244,7 +245,7 @@ int parse_torrent_file(torrent *tr, const char *fname)
   return exit_code;
 }
 
-void free_torrent(torrent *t)
+void free_torrent_file(torrent_file *t)
 {
   free(t->name);
   free(t->piece_hashes);

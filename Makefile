@@ -19,14 +19,14 @@ all: test $(TARGET)
 $(TARGET): bencode.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
-test: bencode.o bencode_test.o torrent.o torrent_test.o $(TEST_DIR)/main.c
+test: bencode.o bencode_test.o torrent_file.o torrent_file_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 	@ ./$(TARGET_TEST)
 
-torrent_test.o: $(TEST_DIR)/torrent_test.c
+torrent_file_test.o: $(TEST_DIR)/torrent_file_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
-torrent.o: $(SRC_DIR)/torrent.c
+torrent_file.o: $(SRC_DIR)/torrent_file.c
 	@ $(CC) $(CFLAGS) -c $?
 
 bencode_test.o: $(TEST_DIR)/bencode_test.c

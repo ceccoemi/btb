@@ -5,7 +5,7 @@
 
 #include "../src/bencode.h"
 #include "bencode_test.h"
-#include "torrent_test.h"
+#include "torrent_file_test.h"
 
 int main(void)
 {
