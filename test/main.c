@@ -5,6 +5,7 @@
 
 #include "../src/bencode.h"
 #include "bencode_test.h"
+#include "protocol_test.h"
 #include "torrent_file_test.h"
 
 int main(void)
@@ -30,6 +31,9 @@ int main(void)
   test_sample_torrent();
   fprintf(stdout, "\ttest_debian_torrent\n");
   test_debian_torrent();
+
+  fprintf(stdout, "\ttest_contact_tracker\n");
+  test_contact_tracker();
 
   fprintf(stdout, "done\n");
 }

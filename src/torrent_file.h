@@ -1,3 +1,5 @@
+#pragma once
+
 #define TORRENT_OK 0
 #define TORRENT_ERROR 1
 
