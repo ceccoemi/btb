@@ -13,7 +13,7 @@ void test_contact_tracker()
     fprintf(stderr, "parsing failed: got error code %d\n", err);
     goto exit;
   }
-  contact_tracker(tf, "1111111111111111111");
+  tracker_response *r = contact_tracker(tf, "1111111111111111111");
 exit:
   free_torrent_file(tf);
 }
