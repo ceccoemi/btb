@@ -14,7 +14,7 @@ typedef struct
 
 typedef struct
 {
-  int interval;
+  long interval;
   peer *peers;
 } tracker_response;
 
