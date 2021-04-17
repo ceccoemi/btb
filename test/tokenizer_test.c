@@ -1,11 +1,11 @@
-#include "../src/bencode.h"
+#include "../src/tokenizer.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "bencode_test.h"
+#include "tokenizer_test.h"
 
 void test_tokenization(char *input, long unsigned input_len, const char *want[], int num_tokens)
 {

@@ -16,10 +16,10 @@ LIBS := -lcrypto -lcurl
 
 all: test $(TARGET)
 
-$(TARGET): bencode.o $(SRC_DIR)/main.c
+$(TARGET): tokenizer.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
-test: bencode.o bencode_test.o torrent_file.o torrent_file_test.o protocol.o protocol_test.o $(TEST_DIR)/main.c
+test: tokenizer.o tokenizer_test.o torrent_file.o torrent_file_test.o protocol.o protocol_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 	@ ./$(TARGET_TEST)
 
@@ -35,10 +35,10 @@ torrent_file_test.o: $(TEST_DIR)/torrent_file_test.c
 torrent_file.o: $(SRC_DIR)/torrent_file.c
 	@ $(CC) $(CFLAGS) -c $?
 
-bencode_test.o: $(TEST_DIR)/bencode_test.c
+tokenizer_test.o: $(TEST_DIR)/tokenizer_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
-bencode.o: $(SRC_DIR)/bencode.c
+tokenizer.o: $(SRC_DIR)/tokenizer.c
 	@ $(CC) $(CFLAGS) -c $?
 
 clean:

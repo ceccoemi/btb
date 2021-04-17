@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bencode.h"
+#include "tokenizer.h"
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 

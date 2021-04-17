@@ -1,11 +1,7 @@
-#include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "../src/bencode.h"
-#include "bencode_test.h"
 #include "protocol_test.h"
+#include "tokenizer_test.h"
 #include "torrent_file_test.h"
 
 int main(void)
