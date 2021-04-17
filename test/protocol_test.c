@@ -18,6 +18,20 @@ void test_contact_tracker()
     fprintf(stderr, "wrong interval: got %ld, want %ld\n", r->interval, 900l);
     goto exit;
   }
+  for (long i = 0; i < r->num_peers; i++) {
+    if (r->peers[i]->port == 0) {
+      fprintf(stderr, "peer with unexpected 0 port\n");
+      goto exit;
+    }
+    if (r->peers[i]->address == NULL) {
+      fprintf(stderr, "i-%ld peer has a NULL address\n", i);
+      goto exit;
+    }
+  }
+  if (r->num_peers < 0) {
+    fprintf(stderr, "negative number of peers\n");
+    goto exit;
+  }
 exit:
   free_torrent_file(tf);
 }

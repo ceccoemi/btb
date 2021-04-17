@@ -247,10 +247,18 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
 
 void free_torrent_file(torrent_file *t)
 {
-  free(t->name);
-  free(t->piece_hashes);
-  free(t->info_hash);
-  free(t->comment);
-  free(t->announce);
+  if (t == NULL) {
+    return;
+  }
+  if (t->name != NULL) free(t->name);
+  if (t->piece_hashes != NULL) {
+    for (long long i = 0; i < t->num_pieces; i++) {
+      if (t->piece_hashes[i] != NULL) free(t->piece_hashes[i]);
+    }
+    free(t->piece_hashes);
+  }
+  if (t->info_hash != NULL) free(t->info_hash);
+  if (t->comment != NULL) free(t->comment);
+  if (t->announce != NULL) free(t->announce);
   free(t);
 }

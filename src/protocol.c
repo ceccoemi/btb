@@ -69,22 +69,42 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   tracker_response *r = malloc(sizeof(tracker_response));
   r->interval = 0;
   r->peers = NULL;
+  r->num_peers = 0;
   tokenizer *tk = init_tokenizer(response->data, response->len);
   free(response);
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
   err = next(tk);  // s
   if (err != TOKENIZER_OK) goto tokenizer_error;
-  err = next(tk);  // "interval" or "peers"
+  err = next(tk);  // "interval"
   if (err != TOKENIZER_OK) goto tokenizer_error;
-  if (memcmp(tk->token, "interval", tk->token_size) == 0) {
-    err = next(tk);  // i
-    if (err != TOKENIZER_OK) goto tokenizer_error;
-    err = next(tk);  // interval value
-    if (err != TOKENIZER_OK) goto tokenizer_error;
-    r->interval = strtol(tk->token, NULL, 10);
-    err = next(tk);  // e
-    if (err != TOKENIZER_OK) goto tokenizer_error;
+  if (memcmp(tk->token, "interval", tk->token_size) != 0) goto tracker_response_parsing_error;
+  err = next(tk);  // i
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  err = next(tk);  // interval value
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  r->interval = strtol(tk->token, NULL, 10);
+  err = next(tk);  // e
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+
+  err = next(tk);  // s
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  err = next(tk);  // "peers"
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  if (memcmp(tk->token, "peers", tk->token_size) != 0) goto tracker_response_parsing_error;
+  err = next(tk);  // s
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  err = next(tk);  // peers blob
+  if (err != TOKENIZER_OK) goto tokenizer_error;
+  r->num_peers = tk->token_size / PEER_BLOB_SIZE;
+  r->peers = malloc(r->num_peers * sizeof(peer *));
+  for (long i = 0; i < r->num_peers; i++) {
+    r->peers[i] = malloc(sizeof(peer));
+    unsigned char *peer_repr = malloc(6);  // 4 bytes address + 2 bytes port
+    memcpy(peer_repr, tk->token + (PEER_BLOB_SIZE * i), 6);
+    memcpy(r->peers[i]->address, peer_repr, 4);
+    r->peers[i]->port = (peer_repr[4] << 8) + peer_repr[5];  // Big endian
+    free(peer_repr);
   }
   free_tokenizer(tk);
   return r;
@@ -94,14 +114,25 @@ tokenizer_error:
   free(tk);
   free_tracker_response(r);
   return NULL;
+
+tracker_response_parsing_error:
+  fprintf(stderr, "unexpected tracker response: %.*s\n", (int)tk->data_size, tk->data);
+  free(tk);
+  free_tracker_response(r);
+  return NULL;
 }
 
 void free_tracker_response(tracker_response *t)
 {
-  if (t != NULL) {
-    if (t->peers != NULL) {
-      free(t->peers);
+  if (t == NULL) return;
+  if (t->peers != NULL) {
+    fprintf(stdout, "ooo\n");
+    for (long i = 0; t->num_peers; i++) {
+      fprintf(stdout, "i: %ld\n", i);
+      if (t->peers[i] != NULL) free(t->peers[i]);
     }
-    free(t);
+    fprintf(stdout, "uuuu\n");
+    free(t->peers);
   }
+  free(t);
 }
