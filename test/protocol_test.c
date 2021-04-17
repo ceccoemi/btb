@@ -13,7 +13,11 @@ void test_contact_tracker()
     fprintf(stderr, "parsing failed: got error code %d\n", err);
     goto exit;
   }
-  tracker_response *r = contact_tracker(tf, "1111111111111111111");
+  tracker_response *r = contact_tracker(tf, "mysuperduperpeeid___");
+  if (r->interval != 900l) {
+    fprintf(stderr, "wrong interval: got %ld, want %ld\n", r->interval, 900l);
+    goto exit;
+  }
 exit:
   free_torrent_file(tf);
 }
