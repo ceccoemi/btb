@@ -10,29 +10,47 @@ WARNINGS := -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wcast-align \
             -Wstrict-prototypes
 CSTD := c17
 CFLAGS := -O3 -std=$(CSTD) $(WARNINGS)
-LIBS := -lcrypto
+LIBS := -lcrypto -lcurl
 
 .PHONY: clean test
 
 all: test $(TARGET)
 
-$(TARGET): bencode.o $(SRC_DIR)/main.c
+$(TARGET): tokenizer.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
-test: bencode.o bencode_test.o torrent.o torrent_test.o $(TEST_DIR)/main.c
+test: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o protocol.o protocol_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 	@ ./$(TARGET_TEST)
 
-torrent_test.o: $(TEST_DIR)/torrent_test.c
+protocol_test.o: $(TEST_DIR)/protocol_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
-torrent.o: $(SRC_DIR)/torrent.c
+protocol.o: $(SRC_DIR)/protocol.c
 	@ $(CC) $(CFLAGS) -c $?
 
-bencode_test.o: $(TEST_DIR)/bencode_test.c
+peer_test.o: $(TEST_DIR)/peer_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
-bencode.o: $(SRC_DIR)/bencode.c
+peer.o: $(SRC_DIR)/peer.c
+	@ $(CC) $(CFLAGS) -c $?
+
+torrent_file_test.o: $(TEST_DIR)/torrent_file_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+torrent_file.o: $(SRC_DIR)/torrent_file.c
+	@ $(CC) $(CFLAGS) -c $?
+
+file_buf_test.o: $(TEST_DIR)/file_buf_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+file_buf.o: $(SRC_DIR)/file_buf.c
+	@ $(CC) $(CFLAGS) -c $?
+
+tokenizer_test.o: $(TEST_DIR)/tokenizer_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+tokenizer.o: $(SRC_DIR)/tokenizer.c
 	@ $(CC) $(CFLAGS) -c $?
 
 clean:

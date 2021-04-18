@@ -1,4 +1,4 @@
-#include "torrent.h"
+#include "torrent_file.h"
 
 #include <openssl/sha.h>
 #include <stdbool.h>
@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bencode.h"
+#include "file_buf.h"
+#include "tokenizer.h"
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 
-torrent *init_torrent()
+torrent_file *init_torrent_file()
 {
-  torrent *t = malloc(sizeof(torrent));
+  torrent_file *t = malloc(sizeof(torrent_file));
   t->announce = NULL;
   t->comment = NULL;
   t->info_hash = NULL;
@@ -24,29 +25,11 @@ torrent *init_torrent()
   return t;
 }
 
-int parse_torrent_file(torrent *tr, const char *fname)
+int parse_torrent_file(torrent_file *tr, const char *fname)
 {
-  // Read the entire file in a buffer.
-  // This fails if the file is > 4GB, but it's shouldn't be our case.
-  FILE *f = fopen(fname, "rb");
-  if (f == NULL) {
-    fprintf(stderr, "Error in opening the file %s\n", fname);
-    return TORRENT_ERROR;
-  }
-  fseek(f, 0, SEEK_END);
-  long length = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  char *buffer = malloc(length);
-  long r = fread(buffer, 1, length, f);
-  if (r != length) {
-    fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length, fname);
-    free(buffer);
-    return TORRENT_ERROR;
-  }
-  fclose(f);
-
-  tokenizer *tk = init_tokenizer(buffer, length);
-  free(buffer);
+  file_buf *buf = read_file(fname);
+  tokenizer *tk = init_tokenizer(buf->data, buf->size);
+  free_file_buf(buf);
 
   int exit_code = TORRENT_OK;
   // Pointer to the location where the info section starts,
@@ -244,12 +227,20 @@ int parse_torrent_file(torrent *tr, const char *fname)
   return exit_code;
 }
 
-void free_torrent(torrent *t)
+void free_torrent_file(torrent_file *t)
 {
-  free(t->name);
-  free(t->piece_hashes);
-  free(t->info_hash);
-  free(t->comment);
-  free(t->announce);
+  if (t == NULL) {
+    return;
+  }
+  if (t->name != NULL) free(t->name);
+  if (t->piece_hashes != NULL) {
+    for (long long i = 0; i < t->num_pieces; i++) {
+      if (t->piece_hashes[i] != NULL) free(t->piece_hashes[i]);
+    }
+    free(t->piece_hashes);
+  }
+  if (t->info_hash != NULL) free(t->info_hash);
+  if (t->comment != NULL) free(t->comment);
+  if (t->announce != NULL) free(t->announce);
   free(t);
 }

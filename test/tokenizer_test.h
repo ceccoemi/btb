@@ -1,3 +1,5 @@
+#pragma once
+
 void test_tokenize_int(void);
 
 void test_tokenize_str(void);

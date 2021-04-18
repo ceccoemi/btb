@@ -1,17 +1,17 @@
-#include "../src/torrent.h"
+#include "../src/torrent_file.h"
 
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "torrent_test.h"
+#include "torrent_file_test.h"
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
 
 void test_sample_torrent()
 {
-  torrent *t = init_torrent();
+  torrent_file *t = init_torrent_file();
   int err = parse_torrent_file(t, "test/data/sample.torrent");
   if (err != TORRENT_OK) {
     fprintf(stderr, "parsing failed: got error code %d\n", err);
@@ -41,12 +41,12 @@ void test_sample_torrent()
   if (memcmp(t->info_hash, want_hash_info, SHA_DIGEST_LENGTH) != 0) {
     fprintf(stderr, "wrong info_hash\n");
   }
-  free_torrent(t);
+  free_torrent_file(t);
 }
 
 void test_debian_torrent()
 {
-  torrent *t = init_torrent();
+  torrent_file *t = init_torrent_file();
   int err = parse_torrent_file(t, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
   if (err != TORRENT_OK) {
     fprintf(stderr, "parsing failed: got error code %d\n", err);
@@ -98,5 +98,5 @@ void test_debian_torrent()
     goto exit;
   }
 exit:
-  free_torrent(t);
+  free_torrent_file(t);
 }
