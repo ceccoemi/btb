@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "peer_test.h"
 #include "protocol_test.h"
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"
@@ -27,6 +28,9 @@ int main(void)
   test_sample_torrent();
   fprintf(stdout, "\ttest_debian_torrent\n");
   test_debian_torrent();
+
+  fprintf(stdout, "\ttest_init_peer\n");
+  test_init_peer();
 
   fprintf(stdout, "\ttest_contact_tracker\n");
   test_contact_tracker();

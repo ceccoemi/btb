@@ -5,6 +5,8 @@
 #include "../src/protocol.h"
 #include "../src/torrent_file.h"
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 void test_contact_tracker()
 {
   torrent_file *tf = init_torrent_file();
@@ -34,4 +36,5 @@ void test_contact_tracker()
   }
 exit:
   free_torrent_file(tf);
+  free_tracker_response(r);
 }

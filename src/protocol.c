@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "peer.h"
 #include "tokenizer.h"
 #include "torrent_file.h"
 
@@ -99,11 +100,9 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   r->num_peers = tk->token_size / PEER_BLOB_SIZE;
   r->peers = malloc(r->num_peers * sizeof(peer *));
   for (long i = 0; i < r->num_peers; i++) {
-    r->peers[i] = malloc(sizeof(peer));
-    unsigned char *peer_repr = malloc(6);  // 4 bytes address + 2 bytes port
+    unsigned char *peer_repr = malloc(PEER_BLOB_SIZE);
     memcpy(peer_repr, tk->token + (PEER_BLOB_SIZE * i), 6);
-    memcpy(r->peers[i]->address, peer_repr, 4);
-    r->peers[i]->port = (peer_repr[4] << 8) + peer_repr[5];  // Big endian
+    r->peers[i] = init_peer(peer_repr);
     free(peer_repr);
   }
   free_tokenizer(tk);
@@ -126,12 +125,11 @@ void free_tracker_response(tracker_response *t)
 {
   if (t == NULL) return;
   if (t->peers != NULL) {
-    fprintf(stdout, "ooo\n");
-    for (long i = 0; t->num_peers; i++) {
-      fprintf(stdout, "i: %ld\n", i);
-      if (t->peers[i] != NULL) free(t->peers[i]);
+    for (long i = 0; i < t->num_peers; i++) {
+      if (t->peers[i] != NULL) {
+        free_peer(t->peers[i]);
+      }
     }
-    fprintf(stdout, "uuuu\n");
     free(t->peers);
   }
   free(t);
