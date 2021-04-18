@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "file_buf_test.h"
 #include "peer_test.h"
 #include "protocol_test.h"
 #include "tokenizer_test.h"
@@ -23,6 +24,9 @@ int main(void)
   test_tokenize_dict();
   fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
   test_tokenize_str_with_null_char();
+
+  fprintf(stdout, "\ttest_read_file");
+  test_read_file();
 
   fprintf(stdout, "\ttest_sample_torrent\n");
   test_sample_torrent();

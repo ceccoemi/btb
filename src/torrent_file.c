@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "file_buf.h"
 #include "tokenizer.h"
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
@@ -26,28 +27,9 @@ torrent_file *init_torrent_file()
 
 int parse_torrent_file(torrent_file *tr, const char *fname)
 {
-  // Read the entire file in a buffer.
-  // This fails if the file is > 4GB, but it's shouldn't be our case.
-  FILE *f = fopen(fname, "rb");
-  if (f == NULL) {
-    fprintf(stderr, "Error in opening the file %s\n", fname);
-    return TORRENT_ERROR;
-  }
-  fseek(f, 0, SEEK_END);
-  long length = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  char *buffer = malloc(length);
-  long r = fread(buffer, 1, length, f);
-  if (r != length) {
-    fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length, fname);
-    fclose(f);
-    free(buffer);
-    return TORRENT_ERROR;
-  }
-  fclose(f);
-
-  tokenizer *tk = init_tokenizer(buffer, length);
-  free(buffer);
+  file_buf *buf = read_file(fname);
+  tokenizer *tk = init_tokenizer(buf->data, buf->size);
+  free_file_buf(buf);
 
   int exit_code = TORRENT_OK;
   // Pointer to the location where the info section starts,
