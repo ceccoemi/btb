@@ -7,9 +7,7 @@
 peer *init_peer(const unsigned char peer_repr[PEER_BLOB_SIZE])
 {
   peer *p = malloc(sizeof(peer));
-  for (int i = 0; i < PEER_ADDR_SIZE; i++) {
-    p->address[i] = peer_repr[i];
-  }
+  memcpy(p->address, peer_repr, PEER_ADDR_SIZE);
   p->port = (peer_repr[PEER_ADDR_SIZE] << 8) + peer_repr[PEER_ADDR_SIZE + 1];  // Big endian
   return p;
 }
