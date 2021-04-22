@@ -19,14 +19,14 @@ all: test $(TARGET)
 $(TARGET): tokenizer.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
-test: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o protocol.o protocol_test.o $(TEST_DIR)/main.c
+test: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o tracker_response_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 	@ ./$(TARGET_TEST)
 
-protocol_test.o: $(TEST_DIR)/protocol_test.c
+tracker_response_test.o: $(TEST_DIR)/tracker_response_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
-protocol.o: $(SRC_DIR)/protocol.c
+tracker_response.o: $(SRC_DIR)/tracker_response.c
 	@ $(CC) $(CFLAGS) -c $?
 
 peer_test.o: $(TEST_DIR)/peer_test.c

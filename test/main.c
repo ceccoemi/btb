@@ -2,9 +2,9 @@
 
 #include "file_buf_test.h"
 #include "peer_test.h"
-#include "protocol_test.h"
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"
+#include "tracker_response_test.h"
 
 int main(void)
 {

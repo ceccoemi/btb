@@ -1,9 +1,9 @@
-#include "protocol_test.h"
+#include "tracker_response_test.h"
 
 #include <stdio.h>
 
-#include "../src/protocol.h"
 #include "../src/torrent_file.h"
+#include "../src/tracker_response.h"
 
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
