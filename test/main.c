@@ -39,5 +39,8 @@ int main(void)
   fprintf(stdout, "\ttest_contact_tracker\n");
   test_contact_tracker();
 
+  fprintf(stdout, "\test_perform_handshake\n");
+  test_perform_handshake();
+
   fprintf(stdout, "done\n");
 }
