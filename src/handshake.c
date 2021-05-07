@@ -2,9 +2,13 @@
 
 #include "handshake.h"
 
+#include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
+#include <openssl/sha.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
@@ -13,25 +17,9 @@
 int perform_handshake(tracker_response *r, const unsigned char peer_id[PEER_ID_LENGTH],
                       const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
-  // char handshake_request[2048] = "";
-  // strcat(handshake_request, "x13");  // protocol identifier length, always 19 (x13 in hex)
-  // strcat(handshake_request, "BitTorrent protocol");
-  // strcat(handshake_request,
-  //       "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00");  // 8 reserved bytes all set to 0
-  //// Convert info_hash into hexadecimal
-  // for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
-  //  char x[5];
-  //  sprintf(x, "\\x%02x", info_hash[i]);
-  //  strcat(handshake_request, x);
-  //}
-  // for (int i = 0; i < PEER_ID_LENGTH; i++) {
-  //  char x[5];
-  //  sprintf(x, "\\x%02x", peer_id[i]);
-  //  strcat(handshake_request, x);
-  //}
-  // fprintf(stdout, "handshake request:\n%s\n", handshake_request);
   int pstrlen = 19;  // string length of the <pstr> field.
-  char handshake_request[49 + pstrlen];
+  int handshake_length = 49 + pstrlen;
+  char handshake_request[handshake_length];
   char *handshake_last = handshake_request;
   handshake_last[0] = pstrlen;  // protocol identifier length, always 19
   handshake_last++;
@@ -53,10 +41,17 @@ int perform_handshake(tracker_response *r, const unsigned char peer_id[PEER_ID_L
     handshake_last[i] = peer_id[i];
   }
   handshake_last += PEER_ID_LENGTH;
-  fprintf(stdout, "handshake size:\n%d\n", handshake_last - handshake_request);
 
-  // Try to connect to the first peer
-  peer *p = r->peers[0];
+  for (int i = 0; i < r->num_peers; i++) {
+    if (contact_peer(r->peers[i], handshake_request, handshake_length, pstrlen) == 0) {
+      break;
+    }
+  }
+}
+
+int contact_peer(peer *p, char *handshake_request, int handshake_length, int pstrlen)
+{
+  int return_code = 0;
 
   char peer_addr[16];  // max len ip address is xxx.xxx.xxx.xxx (15 + '\0' = 16 bytes)
   sprintf(peer_addr, "%d.%d.%d.%d", p->address[0], p->address[1], p->address[2], p->address[3]);
@@ -70,22 +65,79 @@ int perform_handshake(tracker_response *r, const unsigned char peer_id[PEER_ID_L
   getaddrinfo(peer_addr, peer_port, hints, &res);
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  fcntl(sockfd, F_SETFL, O_NONBLOCK);  // non-blocking socket
 
   fprintf(stdout, "connecting %s:%s\n", peer_addr, peer_port);
   int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  if (err != 0) {
-    fprintf(stdout, "connection error\n");
-    return err;
+  if (errno != EINPROGRESS) {
+    fprintf(stdout, "connection error: %d\n", err);
+    return_code = -1;
+    goto exit;
   }
-  int bytes_sent = send(sockfd, handshake_request, handshake_last - handshake_request, 0);
-  fprintf(stdout, "bytes_sent: %d\n", bytes_sent);
 
-  char buf[2048];
-  int bytes_received = recv(sockfd, buf, 2048, 0);
-  fprintf(stdout, "bytes_received: %d\n", bytes_received);
-  fprintf(stdout, "peer response: %d%c%c%c\n", buf[0], buf[1], buf[2], buf[3]);
+  struct pollfd pfds[1];
+  pfds[0].fd = sockfd;
+  pfds[0].events = POLLOUT;
+  int num_events = poll(pfds, 1, 5000);  // 5 seconds timeout
+  if (num_events == 0) {
+    fprintf(stderr, "Poll timed out\n");
+    return_code = -1;
+    goto exit;
+  }
+  int happened = pfds[0].revents & POLLOUT;
 
+  if (!happened) {
+    fprintf(stderr, "unexpected event: %d\n", happened);
+    return_code = -1;
+    goto exit;
+  }
+  fprintf(stdout, "ready to send data\n");
+
+  int bytes_sent = send(sockfd, handshake_request, handshake_length, 0);
+  if (bytes_sent != handshake_length) {
+    fprintf(stderr, "didn't sent all handshake data: sent %d, want %d\n", bytes_sent,
+            handshake_length);
+    return_code = -1;
+    goto exit;
+  }
+  fprintf(stdout, "sent %d bytes\n", bytes_sent);
+
+  pfds[0].events = POLLIN;
+  num_events = poll(pfds, 1, 5000);  // 5 seconds timeout
+  if (num_events == 0) {
+    fprintf(stderr, "Poll timed out\n");
+    return_code = -1;
+    goto exit;
+  }
+  happened = pfds[0].revents & POLLIN;
+
+  if (!happened) {
+    fprintf(stderr, "unexpected event: %d\n", happened);
+    return_code = -1;
+    goto exit;
+  }
+  fprintf(stdout, "ready to receive data\n");
+
+  char buf_response[2048];
+  int bytes_received = recv(sockfd, buf_response, 2048, 0);
+  fprintf(stdout, "received %d bytes\n", bytes_received);
+
+  if (bytes_received < handshake_length) {
+    fprintf(stderr, "unexpected peer response: got %d bytes, want %d bytes\n", bytes_received,
+            handshake_length);
+    return_code = -1;
+    goto exit;
+  }
+  int info_hash_start = 1 + pstrlen + 8;
+  if (memcmp(buf_response + info_hash_start, handshake_request + info_hash_start,
+             SHA_DIGEST_LENGTH) != 0) {
+    fprintf(stderr, "wrong infohash from peer response\n");
+    return_code = -1;
+    goto exit;
+  }
+
+exit:
   freeaddrinfo(hints);
   freeaddrinfo(res);
-  return 0;
+  return return_code;
 }
