@@ -20,7 +20,12 @@ void test_perform_handshake()
     fprintf(stderr, "failed to contact the tracker");
     goto exit;
   }
-  err = perform_handshake(r, peer_id, tf->info_hash);
+  handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
+  // contact the first 3 peers
+  for (long i = 0; i < r->num_peers && i < 3; i++) {
+    perform_handshake(r->peers[i], h);
+  }
+  free_handshake_msg(h);
 
 exit:
   free_torrent_file(tf);
