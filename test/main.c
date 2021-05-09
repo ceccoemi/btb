@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "file_buf_test.h"
+#include "handshake_test.h"
 #include "peer_test.h"
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"

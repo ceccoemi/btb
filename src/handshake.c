@@ -7,47 +7,13 @@
 #include <netdb.h>
 #include <openssl/sha.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
 #include "peer.h"
-
-int perform_handshake(tracker_response *r, const unsigned char peer_id[PEER_ID_LENGTH],
-                      const unsigned char info_hash[SHA_DIGEST_LENGTH])
-{
-  int pstrlen = 19;  // string length of the <pstr> field.
-  int handshake_length = 49 + pstrlen;
-  char handshake_request[handshake_length];
-  char *handshake_last = handshake_request;
-  handshake_last[0] = pstrlen;  // protocol identifier length, always 19
-  handshake_last++;
-  char pstr[] = "BitTorrent protocol";
-  memcpy(handshake_last, pstr, pstrlen);
-  handshake_last += pstrlen;
-  // 8 reserved bytes all set to 0
-  for (int i = 0; i < 8; i++) {
-    handshake_last[i] = 0;
-  }
-  handshake_last += 8;
-  // Add info_hash
-  for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
-    handshake_last[i] = info_hash[i];
-  }
-  handshake_last += SHA_DIGEST_LENGTH;
-  // Add peer_id
-  for (int i = 0; i < PEER_ID_LENGTH; i++) {
-    handshake_last[i] = peer_id[i];
-  }
-  handshake_last += PEER_ID_LENGTH;
-
-  for (int i = 0; i < r->num_peers; i++) {
-    if (contact_peer(r->peers[i], handshake_request, handshake_length, pstrlen) == 0) {
-      break;
-    }
-  }
-}
 
 int contact_peer(peer *p, char *handshake_request, int handshake_length, int pstrlen)
 {
@@ -141,3 +107,40 @@ exit:
   freeaddrinfo(res);
   return return_code;
 }
+
+int perform_handshake(tracker_response *r, const char peer_id[PEER_ID_LENGTH],
+                      const unsigned char info_hash[SHA_DIGEST_LENGTH])
+{
+  int pstrlen = 19;  // string length of the <pstr> field.
+  int handshake_length = 49 + pstrlen;
+  char handshake_request[handshake_length];
+  char *handshake_last = handshake_request;
+  handshake_last[0] = pstrlen;  // protocol identifier length, always 19
+  handshake_last++;
+  char pstr[] = "BitTorrent protocol";
+  memcpy(handshake_last, pstr, pstrlen);
+  handshake_last += pstrlen;
+  // 8 reserved bytes all set to 0
+  for (int i = 0; i < 8; i++) {
+    handshake_last[i] = 0;
+  }
+  handshake_last += 8;
+  // Add info_hash
+  for (int i = 0; i < SHA_DIGEST_LENGTH; i++) {
+    handshake_last[i] = info_hash[i];
+  }
+  handshake_last += SHA_DIGEST_LENGTH;
+  // Add peer_id
+  for (int i = 0; i < PEER_ID_LENGTH; i++) {
+    handshake_last[i] = peer_id[i];
+  }
+  handshake_last += PEER_ID_LENGTH;
+
+  for (int i = 0; i < r->num_peers; i++) {
+    if (contact_peer(r->peers[i], handshake_request, handshake_length, pstrlen) == 0) {
+      break;
+    }
+  }
+  return 0;
+}
+

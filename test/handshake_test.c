@@ -14,7 +14,7 @@ void test_perform_handshake()
     fprintf(stderr, "parsing failed: got error code %d\n", err);
     goto exit;
   }
-  unsigned char peer_id[PEER_ID_LENGTH + 1] = "BTB-14011996ecis2211";
+  char peer_id[PEER_ID_LENGTH + 1] = "BTB-14011996ecis2211";
   tracker_response *r = contact_tracker(tf, peer_id);
   if (r == NULL) {
     fprintf(stderr, "failed to contact the tracker");
