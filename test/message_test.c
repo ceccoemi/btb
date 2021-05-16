@@ -1,12 +1,13 @@
-#include "handshake_test.h"
+#include "message_test.h"
 
 #include <stdio.h>
 
 #include "../src/handshake.h"
+#include "../src/message.h"
 #include "../src/torrent_file.h"
 #include "../src/tracker_response.h"
 
-void test_perform_handshake()
+void test_read_message()
 {
   torrent_file *tf = init_torrent_file();
   int err = parse_torrent_file(tf, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
@@ -21,8 +22,13 @@ void test_perform_handshake()
     goto exit;
   }
   handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
-  // Perform handshake with the first peer
-  perform_handshake(r->peers[0], h);
+  // contact the first 3 peers
+  for (long i = 0; i < r->num_peers && i < 10; i++) {
+    int sockfd = perform_handshake(r->peers[i], h);
+    if (sockfd < 0) continue;
+    message *m = read_message(sockfd);
+    break;
+  }
   free_handshake_msg(h);
 
 exit:

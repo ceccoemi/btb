@@ -85,7 +85,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   struct pollfd pfds[1];
   pfds[0].fd = sockfd;
   pfds[0].events = POLLOUT;
-  int num_events = poll(pfds, 1, 5000);  // 5 seconds timeout
+  int num_events = poll(pfds, 1, HANDSHAKE_TIMEOUT_MSEC);
   if (num_events == 0) {
     fprintf(stderr, "Timed out\n");
     return_socketfd = -1;

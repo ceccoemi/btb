@@ -5,7 +5,7 @@
 #include "peer.h"
 #include "tracker_response.h"
 
-#define HANDSHAKE_TIMEOUT_MSEC 5000
+#define HANDSHAKE_TIMEOUT_MSEC 2000
 
 typedef struct handshake_msg
 {

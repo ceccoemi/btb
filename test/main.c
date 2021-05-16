@@ -2,6 +2,7 @@
 
 #include "file_buf_test.h"
 #include "handshake_test.h"
+#include "message_test.h"
 #include "peer_test.h"
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"
@@ -42,6 +43,9 @@ int main(void)
 
   fprintf(stdout, "\ttest_perform_handshake\n");
   test_perform_handshake();
+
+  fprintf(stdout, "\ttest_read_message\n");
+  test_read_message();
 
   fprintf(stdout, "done\n");
 }
