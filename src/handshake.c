@@ -100,7 +100,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   }
 
   int bytes_sent = send(sockfd, h->msg, h->length, 0);
-  if (bytes_sent != h->length) {
+  if (bytes_sent != (int)h->length) {
     fprintf(stderr, "didn't sent all handshake data: sent %d, want %ld\n", bytes_sent, h->length);
     return_socketfd = -1;
     goto exit;
@@ -124,7 +124,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   char buf_response[2048];
   int bytes_received = recv(sockfd, buf_response, 2048, 0);
 
-  if (bytes_received < h->length) {
+  if (bytes_received < (int)h->length) {
     fprintf(stderr, "unexpected peer response: got %d bytes, want %ld bytes\n", bytes_received,
             h->length);
     return_socketfd = -1;
