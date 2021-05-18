@@ -17,7 +17,7 @@ typedef struct message
 {
   uint8_t id;
   size_t payload_len;
-  char* payload;
+  unsigned char* payload;
 } message;
 
 // Read a message from a socket

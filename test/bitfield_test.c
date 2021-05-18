@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "../src/bitfield.h"
 #include "../src/handshake.h"
 #include "../src/message.h"
 #include "../src/torrent_file.h"
@@ -26,10 +27,20 @@ void test_bitfield()
     int sockfd = perform_handshake(r->peers[i], h);
     if (sockfd < 0) continue;
     message *m = read_message(sockfd);
+    if (m == NULL) continue;
     if (m->id == MSG_BITFIELD) {
-      fprintf(stdout, "BITFIELD!\n");
+      bitfield *b = init_bitfield(m->payload, m->payload_len);
+      for (long long k = 0; k < tf->num_pieces; k += 8) {
+        fprintf(stdout, "bitfield byte value: %i\n", b->data[k]);
+        for (int j = k; j < k + 8; j++) {
+          if (has_piece(b, j)) {
+            fprintf(stdout, "has piece %d\n", j);
+          }
+        }
+      }
+      free_bitfield(b);
+      break;
     }
-    break;
   }
   free_handshake_msg(h);
 
