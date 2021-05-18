@@ -1,4 +1,4 @@
-#include "message_test.h"
+#include "bitfield_test.h"
 
 #include <stdio.h>
 
@@ -7,7 +7,7 @@
 #include "../src/torrent_file.h"
 #include "../src/tracker_response.h"
 
-void test_read_message()
+void test_bitfield()
 {
   torrent_file *tf = init_torrent_file();
   int err = parse_torrent_file(tf, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
@@ -22,11 +22,13 @@ void test_read_message()
     goto exit;
   }
   handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
-  // contact the first 3 peers
   for (long i = 0; i < r->num_peers && i < 10; i++) {
     int sockfd = perform_handshake(r->peers[i], h);
     if (sockfd < 0) continue;
-    read_message(sockfd);
+    message *m = read_message(sockfd);
+    if (m->id == MSG_BITFIELD) {
+      fprintf(stdout, "BITFIELD!\n");
+    }
     break;
   }
   free_handshake_msg(h);
