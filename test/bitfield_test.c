@@ -43,4 +43,13 @@ void test_bitfield()
   if (!has_piece(b, 15)) {
     fprintf(stderr, "should have %d-th piece\n", 15);
   }
+
+  set_piece(b, 2);
+  set_piece(b, 12);
+  if (!has_piece(b, 2)) {
+    fprintf(stderr, "should have %d-th piece\n", 2);
+  }
+  if (!has_piece(b, 12)) {
+    fprintf(stderr, "should have %d-th piece\n", 12);
+  }
 }

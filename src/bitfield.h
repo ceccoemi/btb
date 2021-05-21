@@ -13,4 +13,6 @@ bitfield *init_bitfield(unsigned char *, size_t);
 
 bool has_piece(bitfield *, int);
 
+void set_piece(bitfield *, int);
+
 void free_bitfield(bitfield *);
