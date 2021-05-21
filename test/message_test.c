@@ -26,7 +26,7 @@ void test_read_message()
   for (long i = 0; i < r->num_peers && i < 10; i++) {
     int sockfd = perform_handshake(r->peers[i], h);
     if (sockfd < 0) continue;
-    message *m = read_message(sockfd);
+    read_message(sockfd);
     break;
   }
   free_handshake_msg(h);
