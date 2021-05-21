@@ -16,6 +16,10 @@ void test_contact_tracker()
     goto exit;
   }
   tracker_response *r = contact_tracker(tf, "mysuperduperpeeid___");
+  if (r == NULL) {
+    fprintf(stderr, "failed to contact tracker\n");
+    goto exit;
+  }
   if (r->interval != 900l) {
     fprintf(stderr, "wrong interval: got %ld, want %ld\n", r->interval, 900l);
     goto exit;

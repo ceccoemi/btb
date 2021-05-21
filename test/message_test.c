@@ -7,6 +7,8 @@
 #include "../src/torrent_file.h"
 #include "../src/tracker_response.h"
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 void test_read_message()
 {
   torrent_file *tf = init_torrent_file();
