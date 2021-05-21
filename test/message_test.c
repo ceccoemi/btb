@@ -24,7 +24,6 @@ void test_read_message()
     goto exit;
   }
   handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
-  // contact the first 3 peers
   for (long i = 0; i < r->num_peers && i < 10; i++) {
     int sockfd = perform_handshake(r->peers[i], h);
     if (sockfd < 0) continue;
