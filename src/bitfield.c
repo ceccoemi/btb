@@ -11,14 +11,14 @@ bitfield *init_bitfield(unsigned char *data, size_t length)
   return b;
 }
 
-bool has_piece(bitfield *b, int index)
+bool has_piece(bitfield *b, size_t index)
 {
   int byte_index = index / 8;
   int offset = index % 8;
   return (b->data[byte_index] >> (7 - offset) & 1) != 0;
 }
 
-void set_piece(bitfield *b, int index)
+void set_piece(bitfield *b, size_t index)
 {
   int byte_index = index / 8;
   int offset = index % 8;

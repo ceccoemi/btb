@@ -11,8 +11,8 @@ typedef struct bitfield
 
 bitfield *init_bitfield(unsigned char *, size_t);
 
-bool has_piece(bitfield *, int);
+bool has_piece(bitfield *, size_t);
 
-void set_piece(bitfield *, int);
+void set_piece(bitfield *, size_t);
 
 void free_bitfield(bitfield *);

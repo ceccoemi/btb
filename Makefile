@@ -19,9 +19,15 @@ all: test $(TARGET)
 $(TARGET): tokenizer.o $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
-test: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o tracker_response_test.o handshake.o handshake_test.o message.o message_test.o bitfield.o bitfield_test.o $(TEST_DIR)/main.c
+test: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o tracker_response_test.o handshake.o handshake_test.o message.o message_test.o bitfield.o bitfield_test.o pieces_queue.o pieces_queue_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 	@ ./$(TARGET_TEST)
+
+pieces_queue_test.o: $(TEST_DIR)/pieces_queue_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+pieces_queue.o: $(SRC_DIR)/pieces_queue.c
+	@ $(CC) $(CFLAGS) -c $?
 
 bitfield_test.o: $(TEST_DIR)/bitfield_test.c
 	@ $(CC) $(CFLAGS) -c $?
