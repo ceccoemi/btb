@@ -10,7 +10,9 @@ typedef struct pieces_queue
 
 pieces_queue* init_pieces_queue(size_t);
 
-int get_piece_index(pieces_queue*);
+size_t get_piece_index(pieces_queue*);
+
+void mark_as_done(pieces_queue*, size_t);
 
 bool is_done(pieces_queue*);
 
