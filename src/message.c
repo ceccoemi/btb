@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 message* read_message(int sockfd)
 {
@@ -46,6 +48,47 @@ message* read_message(int sockfd)
   m->payload = malloc(m->payload_len);
   memcpy(m->payload, buf + 5, m->payload_len);
   return m;
+}
+
+message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* payload)
+{
+  message* msg = malloc(sizeof(message));
+  msg->id = msg_id;
+  msg->payload_len = payload_len;
+  if (msg->payload_len > 0) {
+    msg->payload = malloc(payload_len);
+    memcpy(msg->payload, payload, msg->payload_len);
+  }
+  return msg;
+}
+
+int send_message(int socketfd, message* msg)
+{
+  struct pollfd pfds[1];
+  pfds[0].fd = sockfd;
+  pfds[0].events = POLLOUT;
+  int num_events = poll(pfds, 1, 5000);  // 5 seconds timeout
+  if (num_events == 0) {
+    fprintf(stderr, "timed out\n");
+    return -1;
+  }
+  int happened = pfds[0].revents & POLLOUT;
+
+  if (!happened) {
+    fprintf(stderr, "unexpected event: %d\n", happened);
+    return -1;
+  }
+
+  // 4 bytes for msg len and 1 byte for msg ID
+  size_t msg_data_len = msg->payload_len + 4 + 1;
+  unsigned char* msg_data = malloc(msg_data_len);
+
+  // TODO: msg lennn
+  msg_data[4] = msg->id;
+  memcpy(msg_data + 4, msg->payload, msg->payload_len);
+  int bytes_sent = send(sockfd, msg_data, msg_data_len, 0);
+  free(msg_data);
+  return bytes_sent;
 }
 
 void free_message(message* m)

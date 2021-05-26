@@ -21,6 +21,11 @@ typedef struct message
 } message;
 
 // Read a message from a socket
-message* read_message(int socketfd);
+message* read_message(int);
+
+message* create_message(uint8_t, size_t, unsigned char*);
+
+// Send a message on a socket and returns the number of bytes sent
+int send_message(int, message*);
 
 void free_message(message*);
