@@ -13,6 +13,9 @@
 #define MSG_PIECE 7
 #define MSG_CANCEL 8
 
+#define MESSAGE_RECEIVE_TIMEOUT_MSEC 10000
+#define MESSAGE_SEND_TIMEOUT_MSEC 10000
+
 typedef struct message
 {
   uint8_t id;

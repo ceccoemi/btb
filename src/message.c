@@ -14,7 +14,7 @@ message* read_message(int sockfd)
   struct pollfd pfds[1];
   pfds[0].fd = sockfd;
   pfds[0].events = POLLIN;
-  int num_events = poll(pfds, 1, 10000);  // 10 seconds timeout
+  int num_events = poll(pfds, 1, MESSAGE_RECEIVE_TIMEOUT_MSEC);
   if (num_events == 0) {
     fprintf(stderr, "Timed out\n");
     return NULL;
@@ -62,12 +62,12 @@ message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* paylo
   return msg;
 }
 
-int send_message(int socketfd, message* msg)
+int send_message(int peer_socket, message* msg)
 {
   struct pollfd pfds[1];
-  pfds[0].fd = sockfd;
+  pfds[0].fd = peer_socket;
   pfds[0].events = POLLOUT;
-  int num_events = poll(pfds, 1, 5000);  // 5 seconds timeout
+  int num_events = poll(pfds, 1, MESSAGE_SEND_TIMEOUT_MSEC);
   if (num_events == 0) {
     fprintf(stderr, "timed out\n");
     return -1;
@@ -80,13 +80,16 @@ int send_message(int socketfd, message* msg)
   }
 
   // 4 bytes for msg len and 1 byte for msg ID
-  size_t msg_data_len = msg->payload_len + 4 + 1;
+  size_t msg_data_len = 4 + 1 + msg->payload_len;
   unsigned char* msg_data = malloc(msg_data_len);
 
-  // TODO: msg lennn
+  msg_data[0] = (1 + msg->payload_len) >> 24;
+  msg_data[1] = (1 + msg->payload_len) >> 16;
+  msg_data[2] = (1 + msg->payload_len) >> 8;
+  msg_data[3] = (1 + msg->payload_len);
   msg_data[4] = msg->id;
   memcpy(msg_data + 4, msg->payload, msg->payload_len);
-  int bytes_sent = send(sockfd, msg_data, msg_data_len, 0);
+  int bytes_sent = send(peer_socket, msg_data, msg_data_len, 0);
   free(msg_data);
   return bytes_sent;
 }

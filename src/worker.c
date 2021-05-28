@@ -26,35 +26,45 @@ size_t download_pieces(torrent_file *tf)
       fprintf(stderr, "failed to perform handshake\n");
       continue;
     }
+
+    fprintf(stdout, "Reading bitfield\n");
+    message *msg = read_message(peer_socket);
+    if (msg == NULL) {
+      continue;
+    }
     bitfield *peer_bitfield = NULL;
-    for (int j = 0; j < 10; j++) {
-      message *msg = read_message(peer_socket);
-      if (msg == NULL) {
-        continue;
-      }
-      if (msg->id == MSG_BITFIELD) {
-        fprintf(stdout, "Received bitfield\n");
-        peer_bitfield = init_bitfield(msg->payload, msg->payload_len);
-        free_message(msg);
-        break;
-      } else {
-        fprintf(stdout, "received message with id %hu, skipping...\n", msg->id);
-      }
+    if (msg->id == MSG_BITFIELD) {
+      fprintf(stdout, "Received bitfield\n");
+      peer_bitfield = init_bitfield(msg->payload, msg->payload_len);
       free_message(msg);
+    } else {
+      fprintf(stdout, "received message with id %hu, skipping...\n", msg->id);
+      continue;
     }
-    if (peer_bitfield == NULL) {
-      fprintf(stderr, "not able to receive a bitfield\n");
-      goto exit;
-    }
+
+    fprintf(stdout, "Sending interested message\n");
     message *interested_msg = create_message(MSG_INTERESTED, 0, NULL);
     if (send_message(peer_socket, interested_msg) < 0) {
       fprintf(stderr, "error in sending interested message\n");
       free_message(interested_msg);
       break;
     }
-    free_message(interested_msg);
-    pieces_queue *q = init_pieces_queue(tf->num_pieces);
+    fprintf(stdout, "Sent interested message\n");
+    // free_message(interested_msg);
+
+    for (int i = 0; i < 10; i++) {
+      fprintf(stdout, "Reading message\n");
+      message *msg_2 = read_message(peer_socket);
+      if (msg_2 == NULL) {
+        fprintf(stdout, "NULL message\n");
+        continue;
+      } else {
+        fprintf(stdout, "Received message %hu\n", msg_2->id);
+        free_message(msg_2);
+      }
+    }
     break;
+    // pieces_queue *q = init_pieces_queue(tf->num_pieces);
   }
 
 exit:

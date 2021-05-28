@@ -235,9 +235,7 @@ void free_torrent_file(torrent_file *t)
   if (t->name != NULL) free(t->name);
   if (t->piece_hashes != NULL) {
     for (long long i = 0; i < t->num_pieces; i++) {
-      fprintf(stdout, "before %lld\n", i);
       if (t->piece_hashes[i] != NULL) free(t->piece_hashes[i]);
-      fprintf(stdout, "after %lld\n", i);
     }
     free(t->piece_hashes);
   }
