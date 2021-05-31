@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "../src/torrent_file.h"
+#include "../src/worker.h"
 
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 

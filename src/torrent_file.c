@@ -242,5 +242,6 @@ void free_torrent_file(torrent_file *t)
   if (t->info_hash != NULL) free(t->info_hash);
   if (t->comment != NULL) free(t->comment);
   if (t->announce != NULL) free(t->announce);
+  fprintf(stdout, "address infame: %p\n", t);
   free(t);
 }

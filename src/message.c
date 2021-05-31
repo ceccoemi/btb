@@ -55,6 +55,7 @@ message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* paylo
   message* msg = malloc(sizeof(message));
   msg->id = msg_id;
   msg->payload_len = payload_len;
+  msg->payload = NULL;
   if (msg->payload_len > 0) {
     msg->payload = malloc(payload_len);
     memcpy(msg->payload, payload, msg->payload_len);

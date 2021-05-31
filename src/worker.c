@@ -6,7 +6,6 @@
 #include "bitfield.h"
 #include "handshake.h"
 #include "message.h"
-#include "pieces_queue.h"
 #include "torrent_file.h"
 #include "tracker_response.h"
 
@@ -18,10 +17,11 @@ size_t download_pieces(torrent_file *tf)
     fprintf(stderr, "failed to contact the tracker");
     goto exit;
   }
-  handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
   size_t pieces_downloaded = 0;
   for (long i = 0; i < r->num_peers; i++) {
+    handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
     int peer_socket = perform_handshake(r->peers[i], h);
+    free_handshake_msg(h);
     if (peer_socket < 0) {
       fprintf(stderr, "failed to perform handshake\n");
       continue;
@@ -50,27 +50,20 @@ size_t download_pieces(torrent_file *tf)
       break;
     }
     fprintf(stdout, "Sent interested message\n");
-    // free_message(interested_msg);
+    free_message(interested_msg);
 
-    for (int i = 0; i < 10; i++) {
-      fprintf(stdout, "Reading message\n");
-      message *msg_2 = read_message(peer_socket);
-      if (msg_2 == NULL) {
-        fprintf(stdout, "NULL message\n");
-        continue;
-      } else {
-        fprintf(stdout, "Received message %hu\n", msg_2->id);
-        free_message(msg_2);
-      }
+    fprintf(stdout, "Reading message\n");
+    message *msg_2 = read_message(peer_socket);
+    if (msg_2 != NULL) {
+      fprintf(stdout, "Received message %hu\n", msg_2->id);
+      free_message(msg_2);
     }
     break;
-    // pieces_queue *q = init_pieces_queue(tf->num_pieces);
   }
 
 exit:
   free_torrent_file(tf);
   free_tracker_response(r);
-  free_handshake_msg(h);
 
   return pieces_downloaded;
 }
