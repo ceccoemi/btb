@@ -19,7 +19,15 @@ int tokenize_list_dict_end(tokenizer *);
 
 int tokenize_start(tokenizer *t)
 {
-  if (*t->current == 'i') {
+  if (t->current - t->data == t->data_size) {
+    if (t->list_dict_stack > 0) {
+      // There are some opened lists/dicts
+      t->_status_fn = &tokenize_error;
+    } else {
+      // Correct termination
+      t->_status_fn = &tokenize_end;
+    }
+  } else if (*t->current == 'i') {
     t->_status_fn = &tokenize_int_start;
   } else if (isdigit(*t->current)) {
     t->_status_fn = &tokenize_str_start;
@@ -30,14 +38,6 @@ int tokenize_start(tokenizer *t)
   } else if (isspace(*t->current)) {
     // skip whitespaces
     t->current++;
-  } else if (t->current - t->data == t->data_size) {
-    if (t->list_dict_stack > 0) {
-      // There are some opened lists/dicts
-      t->_status_fn = &tokenize_error;
-    } else {
-      // Correct termination
-      t->_status_fn = &tokenize_end;
-    }
   } else {
     t->_status_fn = &tokenize_error;
   }
@@ -46,6 +46,7 @@ int tokenize_start(tokenizer *t)
 
 int tokenize_end(tokenizer *t)
 {
+  free(t->token);
   t->token = NULL;
   t->token_size = 0;
   return TOKENIZER_END;
@@ -180,11 +181,8 @@ tokenizer *init_tokenizer(const char *data, long unsigned data_size)
 void free_tokenizer(tokenizer *t)
 {
   free(t->data);
-  // t->current points to the same memory location of t->data, no need
-  // to free
-  if (t->token != NULL) {
-    free(t->token);
-  }
+  // t->current points to the same memory location of t->data, no need to free it
+  free(t->token);
   free(t);
 }
 

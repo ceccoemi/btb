@@ -14,7 +14,7 @@ void test_worker()
     fprintf(stderr, "parsing failed: got error code %d\n", err);
     goto exit;
   }
-  size_t pieces_dowloaded = download_pieces(tf);
+  download_pieces(tf);
 
 exit:
   free_torrent_file(tf);

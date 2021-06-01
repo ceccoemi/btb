@@ -34,8 +34,8 @@ size_t download_pieces(torrent_file *tf)
     }
     bitfield *peer_bitfield = NULL;
     if (msg->id == MSG_BITFIELD) {
-      fprintf(stdout, "Received bitfield\n");
       peer_bitfield = init_bitfield(msg->payload, msg->payload_len);
+      fprintf(stdout, "Received bitfield of length %ld\n", peer_bitfield->length);
       free_message(msg);
     } else {
       fprintf(stdout, "received message with id %hu, skipping...\n", msg->id);
