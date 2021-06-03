@@ -51,7 +51,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       exit_code = TORRENT_ERROR;
       break;
     }
-    if (memcmp(tk->token, "announce", strlen("announce")) == 0) {
+    if (tk->token_size == strlen("announce") &&
+        memcmp(tk->token, "announce", strlen("announce")) == 0) {
       /* --- parse announce --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -74,7 +75,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       memcpy(tr->announce, tk->token, tk->token_size);
       tr->announce[tk->token_size] = '\0';
       /* ------------------------ */
-    } else if (memcmp(tk->token, "comment", strlen("comment")) == 0) {
+    } else if (tk->token_size == strlen("comment") &&
+               memcmp(tk->token, "comment", strlen("comment")) == 0) {
       /* --- parse comment --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -97,7 +99,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       memcpy(tr->comment, tk->token, tk->token_size);
       tr->comment[tk->token_size] = '\0';
       /* ------------------------ */
-    } else if (memcmp(tk->token, "info", strlen("info")) == 0) {
+    } else if (tk->token_size == strlen("info") &&
+               memcmp(tk->token, "info", strlen("info")) == 0) {
       info_start = tk->current;
       info_start_stack_value = tk->list_dict_stack;
       err = next(tk);
@@ -112,7 +115,7 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
         break;
       }
     } else if (info_start != NULL && info_end == NULL &&
-               info_start_stack_value == tk->list_dict_stack &&
+               info_start_stack_value == tk->list_dict_stack && tk->token_size == strlen("e") &&
                memcmp(tk->token, "e", strlen("e")) == 0) {
       info_end = tk->current - 1;  // the tk->current pointer is one char over the 'e' char
       err = next(tk);
@@ -123,7 +126,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       }
       tr->info_hash = malloc(SHA_DIGEST_LENGTH);
       SHA1(info_start, info_end - info_start + 1, tr->info_hash);
-    } else if (memcmp(tk->token, "name", strlen("name")) == 0) {
+    } else if (tk->token_size == strlen("name") &&
+               memcmp(tk->token, "name", strlen("name")) == 0) {
       /* --- parse name --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -146,7 +150,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       memcpy(tr->name, tk->token, tk->token_size);
       tr->name[tk->token_size] = '\0';
       /* ------------------------ */
-    } else if (memcmp(tk->token, "length", strlen("length")) == 0) {
+    } else if (tk->token_size == strlen("length") &&
+               memcmp(tk->token, "length", strlen("length")) == 0) {
       /* --- parse length --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -169,8 +174,10 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       memcpy(num, tk->token, tk->token_size);
       num[tk->token_size] = '\0';
       tr->length = strtoll(num, NULL, 10);
+      free(num);
       /* ------------------------ */
-    } else if (memcmp(tk->token, "piece length", strlen("piece length")) == 0) {
+    } else if (tk->token_size == strlen("piece length") &&
+               memcmp(tk->token, "piece length", strlen("piece length")) == 0) {
       /* --- parse piece length --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -193,8 +200,10 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
       memcpy(num, tk->token, tk->token_size);
       num[tk->token_size] = '\0';
       tr->piece_length = strtoll(num, NULL, 10);
+      free(num);
       /* ------------------------ */
-    } else if (memcmp(tk->token, "pieces", strlen("pieces")) == 0) {
+    } else if (tk->token_size == strlen("pieces") &&
+               memcmp(tk->token, "pieces", strlen("pieces")) == 0) {
       /* --- parse pieces --- */
       err = next(tk);
       if (err != TOKENIZER_OK) {
@@ -229,19 +238,13 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
 
 void free_torrent_file(torrent_file *t)
 {
-  if (t == NULL) {
-    return;
+  free(t->name);
+  for (long long i = 0; i < t->num_pieces; i++) {
+    free(t->piece_hashes[i]);
   }
-  if (t->name != NULL) free(t->name);
-  if (t->piece_hashes != NULL) {
-    for (long long i = 0; i < t->num_pieces; i++) {
-      if (t->piece_hashes[i] != NULL) free(t->piece_hashes[i]);
-    }
-    free(t->piece_hashes);
-  }
-  if (t->info_hash != NULL) free(t->info_hash);
-  if (t->comment != NULL) free(t->comment);
-  if (t->announce != NULL) free(t->announce);
-  fprintf(stdout, "address infame: %p\n", t);
+  free(t->piece_hashes);
+  free(t->info_hash);
+  free(t->comment);
+  free(t->announce);
   free(t);
 }

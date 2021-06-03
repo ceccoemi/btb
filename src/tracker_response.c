@@ -32,7 +32,7 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
 {
   CURL *curl = curl_easy_init();
   if (curl == NULL) {
-    fprintf(stderr, "failed to initialize curl\n");
+    fprintf(stderr, "Failed to initialize curl\n");
     return NULL;
   }
 
@@ -61,7 +61,10 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
+  curl_global_cleanup();
   if (out_code != CURLE_OK) {
+    free(response->data);
+    free(response);
     fprintf(stderr, "error in performing the request, curl error code: %d\n", out_code);
     return NULL;
   }
@@ -72,6 +75,7 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   r->peers = NULL;
   r->num_peers = 0;
   tokenizer *tk = init_tokenizer(response->data, response->len);
+  free(response->data);
   free(response);
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
@@ -84,7 +88,12 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   if (err != TOKENIZER_OK) goto tokenizer_error;
   err = next(tk);  // interval value
   if (err != TOKENIZER_OK) goto tokenizer_error;
-  r->interval = strtol(tk->token, NULL, 10);
+  // token is not NULL-terminated
+  char *token_str = malloc(tk->token_size + 1);
+  memcpy(token_str, tk->token, tk->token_size);
+  token_str[tk->token_size] = '\0';
+  r->interval = strtol(token_str, NULL, 10);
+  free(token_str);
   err = next(tk);  // e
   if (err != TOKENIZER_OK) goto tokenizer_error;
 
@@ -123,14 +132,9 @@ tracker_response_parsing_error:
 
 void free_tracker_response(tracker_response *t)
 {
-  if (t == NULL) return;
-  if (t->peers != NULL) {
-    for (long i = 0; i < t->num_peers; i++) {
-      if (t->peers[i] != NULL) {
-        free_peer(t->peers[i]);
-      }
-    }
-    free(t->peers);
+  for (long i = 0; i < t->num_peers; i++) {
+    free_peer(t->peers[i]);
   }
+  free(t->peers);
   free(t);
 }

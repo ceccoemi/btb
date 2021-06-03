@@ -41,6 +41,7 @@ void test_sample_torrent()
   if (memcmp(t->info_hash, want_hash_info, SHA_DIGEST_LENGTH) != 0) {
     fprintf(stderr, "wrong info_hash\n");
   }
+  free(want_hash_info);
   free_torrent_file(t);
 }
 

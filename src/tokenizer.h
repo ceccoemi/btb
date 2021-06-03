@@ -20,7 +20,7 @@ typedef struct tokenizer
   char* data;
   // point to the char from which the next next() call is executed
   char* current;
-  long token_size;
+  size_t token_size;
   // token found when next() is called
   char* token;
   // pointer to a function that represents a tokenizer status

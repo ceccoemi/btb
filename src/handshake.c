@@ -74,10 +74,10 @@ int perform_handshake(peer *p, handshake_msg *h)
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);  // non-blocking socket
 
-  fprintf(stdout, "connecting %s:%s\n", peer_addr, peer_port);
+  fprintf(stdout, "Connecting peer %s:%s\n", peer_addr, peer_port);
   int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
   if (errno != EINPROGRESS) {
-    fprintf(stdout, "connection error: %d\n", err);
+    fprintf(stdout, "Connection error: %d\n", err);
     return_socketfd = -1;
     goto exit;
   }
@@ -94,14 +94,14 @@ int perform_handshake(peer *p, handshake_msg *h)
   int happened = pfds[0].revents & POLLOUT;
 
   if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
+    fprintf(stderr, "Unexpected event: %d\n", happened);
     return_socketfd = -1;
     goto exit;
   }
 
   int bytes_sent = send(sockfd, h->msg, h->length, 0);
   if (bytes_sent != (int)h->length) {
-    fprintf(stderr, "didn't sent all handshake data: sent %d, want %ld\n", bytes_sent, h->length);
+    fprintf(stderr, "Didn't sent all handshake data: sent %d, want %ld\n", bytes_sent, h->length);
     return_socketfd = -1;
     goto exit;
   }
@@ -116,7 +116,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   happened = pfds[0].revents & POLLIN;
 
   if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
+    fprintf(stderr, "Unexpected event: %d\n", happened);
     return_socketfd = -1;
     goto exit;
   }
@@ -125,18 +125,19 @@ int perform_handshake(peer *p, handshake_msg *h)
   int bytes_received = recv(sockfd, buf_response, 2048, 0);
 
   if (bytes_received < (int)h->length) {
-    fprintf(stderr, "unexpected peer response: got %d bytes, want %ld bytes\n", bytes_received,
+    fprintf(stderr, "Unexpected peer response: got %d bytes, want %ld bytes\n", bytes_received,
             h->length);
     return_socketfd = -1;
     goto exit;
   }
   int info_hash_start = h->_info_hash_start - h->msg;
   if (memcmp(buf_response + info_hash_start, h->_info_hash_start, SHA_DIGEST_LENGTH) != 0) {
-    fprintf(stderr, "wrong infohash from peer response\n");
+    fprintf(stderr, "Wrong infohash from peer response\n");
     return_socketfd = -1;
     goto exit;
   }
-  fprintf(stdout, "performed handshake with %s:%s, socket %d\n", peer_addr, peer_port, sockfd);
+  fprintf(stdout, "Performed handshake with peer %s:%s, socket %d\n", peer_addr, peer_port,
+          sockfd);
   return_socketfd = sockfd;
 
 exit:
