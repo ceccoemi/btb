@@ -27,8 +27,6 @@ void set_piece(bitfield *b, size_t index)
 
 void free_bitfield(bitfield *b)
 {
-  if (b != NULL) {
-    if (b->data != NULL) free(b->data);
-    free(b);
-  }
+  free(b->data);
+  free(b);
 }

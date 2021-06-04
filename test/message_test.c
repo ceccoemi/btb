@@ -18,16 +18,18 @@ void test_read_message()
     goto exit;
   }
   char peer_id[PEER_ID_LENGTH + 1] = "BTB-14011996ecis2211";
-  tracker_response *r = contact_tracker(tf, peer_id);
-  if (r == NULL) {
-    fprintf(stderr, "failed to contact the tracker");
+  tracker_response *r = init_tracker_response();
+  int n = contact_tracker(r, tf, "mysuperduperpeeid___");
+  if (n != 0) {
+    fprintf(stderr, "failed to contact tracker\n");
     goto exit;
   }
   handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
   for (long i = 0; i < r->num_peers && i < 10; i++) {
     int sockfd = perform_handshake(r->peers[i], h);
     if (sockfd < 0) continue;
-    read_message(sockfd);
+    message *m = read_message(sockfd);
+    free_message(m);
     break;
   }
   free_handshake_msg(h);

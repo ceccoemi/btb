@@ -13,6 +13,9 @@
 #define MSG_PIECE 7
 #define MSG_CANCEL 8
 
+#define MESSAGE_RECEIVE_TIMEOUT_MSEC 10000
+#define MESSAGE_SEND_TIMEOUT_MSEC 10000
+
 typedef struct message
 {
   uint8_t id;
@@ -21,6 +24,11 @@ typedef struct message
 } message;
 
 // Read a message from a socket
-message* read_message(int socketfd);
+message* read_message(int);
+
+message* create_message(uint8_t, size_t, unsigned char*);
+
+// Send a message on a socket and returns the number of bytes sent
+int send_message(int, message*);
 
 void free_message(message*);

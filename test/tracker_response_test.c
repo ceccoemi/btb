@@ -15,8 +15,9 @@ void test_contact_tracker()
     fprintf(stderr, "parsing failed: got error code %d\n", err);
     goto exit;
   }
-  tracker_response *r = contact_tracker(tf, "mysuperduperpeeid___");
-  if (r == NULL) {
+  tracker_response *r = init_tracker_response();
+  int n = contact_tracker(r, tf, "mysuperduperpeeid___");
+  if (n != 0) {
     fprintf(stderr, "failed to contact tracker\n");
     goto exit;
   }

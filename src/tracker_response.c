@@ -10,7 +10,14 @@
 #include "tokenizer.h"
 #include "torrent_file.h"
 
-#pragma GCC diagnostic ignored "-Wpointer-sign"
+tracker_response *init_tracker_response()
+{
+  tracker_response *t = malloc(sizeof(tracker_response));
+  t->interval = 0;
+  t->peers = NULL;
+  t->num_peers = 0;
+  return t;
+}
 
 // Struct where the output of the GET request will be written
 struct response_data
@@ -28,12 +35,12 @@ size_t parse_response(void *ptr, size_t size, size_t nmemb, struct response_data
   return size * nmemb;
 }
 
-tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_LENGTH])
+int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PEER_ID_LENGTH])
 {
   CURL *curl = curl_easy_init();
   if (curl == NULL) {
-    fprintf(stderr, "failed to initialize curl\n");
-    return NULL;
+    fprintf(stderr, "Failed to initialize curl\n");
+    return -1;
   }
 
   // Build GET request
@@ -50,7 +57,7 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   sprintf(left_param, "&left=%lld", tf->length);
   strcat(get_request, left_param);
   strcat(get_request, "&info_hash=");
-  char *encoded_info_hash = curl_easy_escape(curl, tf->info_hash, SHA_DIGEST_LENGTH);
+  char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, SHA_DIGEST_LENGTH);
   strcat(get_request, encoded_info_hash);
   curl_free(encoded_info_hash);
 
@@ -61,17 +68,17 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
+  curl_global_cleanup();
   if (out_code != CURLE_OK) {
+    // free(response->data);
+    free(response);
     fprintf(stderr, "error in performing the request, curl error code: %d\n", out_code);
-    return NULL;
+    return -1;
   }
 
   // Parse the response into tracker_response
-  tracker_response *r = malloc(sizeof(tracker_response));
-  r->interval = 0;
-  r->peers = NULL;
-  r->num_peers = 0;
   tokenizer *tk = init_tokenizer(response->data, response->len);
+  free(response->data);
   free(response);
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
@@ -84,7 +91,12 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
   if (err != TOKENIZER_OK) goto tokenizer_error;
   err = next(tk);  // interval value
   if (err != TOKENIZER_OK) goto tokenizer_error;
-  r->interval = strtol(tk->token, NULL, 10);
+  // token is not NULL-terminated
+  char *token_str = malloc(tk->token_size + 1);
+  memcpy(token_str, tk->token, tk->token_size);
+  token_str[tk->token_size] = '\0';
+  r->interval = strtol(token_str, NULL, 10);
+  free(token_str);
   err = next(tk);  // e
   if (err != TOKENIZER_OK) goto tokenizer_error;
 
@@ -106,31 +118,24 @@ tracker_response *contact_tracker(torrent_file *tf, const char peer_id[PEER_ID_L
     free(peer_repr);
   }
   free_tokenizer(tk);
-  return r;
+  return 0;
 
 tokenizer_error:
   fprintf(stderr, "tokenizer error: %d\n", err);
-  free(tk);
-  free_tracker_response(r);
-  return NULL;
+  free_tokenizer(tk);
+  return -1;
 
 tracker_response_parsing_error:
   fprintf(stderr, "unexpected tracker response: %.*s\n", (int)tk->data_size, tk->data);
-  free(tk);
-  free_tracker_response(r);
-  return NULL;
+  free_tokenizer(tk);
+  return -1;
 }
 
 void free_tracker_response(tracker_response *t)
 {
-  if (t == NULL) return;
-  if (t->peers != NULL) {
-    for (long i = 0; i < t->num_peers; i++) {
-      if (t->peers[i] != NULL) {
-        free_peer(t->peers[i]);
-      }
-    }
-    free(t->peers);
+  for (long i = 0; i < t->num_peers; i++) {
+    free_peer(t->peers[i]);
   }
+  free(t->peers);
   free(t);
 }
