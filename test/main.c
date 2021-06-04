@@ -9,7 +9,6 @@
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"
 #include "tracker_response_test.h"
-#include "worker_test.h"
 
 int main(void)
 {
@@ -53,11 +52,8 @@ int main(void)
   fprintf(stdout, "\ttest_bitfield\n");
   test_bitfield();
 
-  // fprintf(stdout, "\ttest_pieces_queue\n");
-  // test_pieces_queue();
-
-  // fprintf(stdout, "\ttest_worker\n");
-  // test_worker();
+  fprintf(stdout, "\ttest_pieces_queue\n");
+  test_pieces_queue();
 
   fprintf(stdout, "done\n");
 }

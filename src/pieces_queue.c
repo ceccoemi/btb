@@ -8,6 +8,7 @@ pieces_queue* init_pieces_queue(size_t num_pieces)
   q->num_pieces = num_pieces;
   unsigned char* bitfield_data = calloc(1, q->num_pieces);
   q->current_bitfield = init_bitfield(bitfield_data, q->num_pieces);
+  free(bitfield_data);
   return q;
 }
 
@@ -36,7 +37,6 @@ bool is_done(pieces_queue* q)
 
 void free_pieces_queue(pieces_queue* q)
 {
-  if (q != NULL) {
-    if (q->current_bitfield != NULL) free(q->current_bitfield);
-  }
+  free_bitfield(q->current_bitfield);
+  free(q);
 }

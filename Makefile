@@ -19,14 +19,8 @@ $(TARGET): tokenizer.o $(SRC_DIR)/main.c
 test: build
 	@ ./$(TARGET_TEST)
 
-build: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o tracker_response_test.o handshake.o handshake_test.o message.o message_test.o bitfield.o bitfield_test.o pieces_queue.o pieces_queue_test.o worker.o worker_test.o $(TEST_DIR)/main.c
+build: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o tracker_response_test.o handshake.o handshake_test.o message.o message_test.o bitfield.o bitfield_test.o pieces_queue.o pieces_queue_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
-
-worker_test.o: $(TEST_DIR)/worker_test.c
-	@ $(CC) $(CFLAGS) -c $?
-
-worker.o: $(SRC_DIR)/worker.c
-	@ $(CC) $(CFLAGS) -c $?
 
 pieces_queue_test.o: $(TEST_DIR)/pieces_queue_test.c
 	@ $(CC) $(CFLAGS) -c $?

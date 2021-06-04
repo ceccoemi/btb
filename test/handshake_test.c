@@ -17,9 +17,10 @@ void test_perform_handshake()
     goto exit;
   }
   char peer_id[PEER_ID_LENGTH + 1] = "BTB-14011996ecis2211";
-  tracker_response *r = contact_tracker(tf, peer_id);
-  if (r == NULL) {
-    fprintf(stderr, "Failed to contact the tracker");
+  tracker_response *r = init_tracker_response();
+  int n = contact_tracker(r, tf, "mysuperduperpeeid___");
+  if (n != 0) {
+    fprintf(stderr, "failed to contact tracker\n");
     goto exit;
   }
   handshake_msg *h = init_handshake_msg(peer_id, tf->info_hash);
