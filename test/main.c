@@ -29,22 +29,22 @@ int main(void)
   fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
   test_tokenize_str_with_null_char();
 
-  // fprintf(stdout, "\ttest_read_file\n");
-  // test_read_file();
+  fprintf(stdout, "\ttest_read_file\n");
+  test_read_file();
 
-  // fprintf(stdout, "\ttest_sample_torrent\n");
-  // test_sample_torrent();
-  // fprintf(stdout, "\ttest_debian_torrent\n");
-  // test_debian_torrent();
+  fprintf(stdout, "\ttest_sample_torrent\n");
+  test_sample_torrent();
+  fprintf(stdout, "\ttest_debian_torrent\n");
+  test_debian_torrent();
 
-  // fprintf(stdout, "\ttest_init_peer\n");
-  // test_init_peer();
+  fprintf(stdout, "\ttest_init_peer\n");
+  test_init_peer();
 
-  // fprintf(stdout, "\ttest_contact_tracker\n");
-  // test_contact_tracker();
+  fprintf(stdout, "\ttest_contact_tracker\n");
+  test_contact_tracker();
 
-  // fprintf(stdout, "\ttest_perform_handshake\n");
-  // test_perform_handshake();
+  fprintf(stdout, "\ttest_perform_handshake\n");
+  test_perform_handshake();
 
   // fprintf(stdout, "\ttest_read_message\n");
   // test_read_message();

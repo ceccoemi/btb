@@ -26,10 +26,6 @@ void test_contact_tracker()
     goto exit;
   }
   for (long i = 0; i < r->num_peers; i++) {
-    if (r->peers[i]->port == 0) {
-      fprintf(stderr, "peer with unexpected 0 port\n");
-      goto exit;
-    }
     if (r->peers[i]->address == NULL) {
       fprintf(stderr, "i-%ld peer has a NULL address\n", i);
       goto exit;

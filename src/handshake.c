@@ -74,7 +74,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   fcntl(sockfd, F_SETFL, O_NONBLOCK);  // non-blocking socket
 
-  fprintf(stdout, "Connecting peer %s:%s\n", peer_addr, peer_port);
+  fprintf(stdout, "Contacting peer %s on port %s\n", peer_addr, peer_port);
   int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
   if (errno != EINPROGRESS) {
     fprintf(stdout, "Connection error: %d\n", err);
