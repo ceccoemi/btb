@@ -15,7 +15,7 @@
 // Note that token isn't a null-terminated string, the size is specified in token_size.
 typedef struct tokenizer
 {
-  long long data_size;
+  size_t data_size;
   // hold the entire data to tokenize
   char* data;
   // point to the char from which the next next() call is executed
@@ -31,7 +31,7 @@ typedef struct tokenizer
   long list_dict_stack;
 } tokenizer;
 
-tokenizer* init_tokenizer(const char* data, long unsigned data_size);
+tokenizer* init_tokenizer(const char* data, size_t data_size);
 
 void free_tokenizer(tokenizer* t);
 
