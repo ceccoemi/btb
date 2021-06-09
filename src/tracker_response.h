@@ -1,9 +1,8 @@
 #pragma once
 
 #include "peer.h"
+#include "peer_id.h"
 #include "torrent_file.h"
-
-#define PEER_ID_LENGTH 20
 
 typedef struct
 {
