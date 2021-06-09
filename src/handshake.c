@@ -12,6 +12,7 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "peer.h"
 
@@ -100,6 +101,11 @@ int perform_handshake(peer *p, handshake_msg *h)
   }
 
   int bytes_sent = send(sockfd, h->msg, h->length, 0);
+  if (bytes_sent < 0) {
+    fprintf(stderr, "send failed: %s\n", strerror(errno));
+    return_socketfd = -1;
+    goto exit;
+  }
   if (bytes_sent != (int)h->length) {
     fprintf(stderr, "Didn't sent all handshake data: sent %d, want %ld\n", bytes_sent, h->length);
     return_socketfd = -1;
@@ -121,10 +127,14 @@ int perform_handshake(peer *p, handshake_msg *h)
     goto exit;
   }
 
-  char buf_response[2048];
-  int bytes_received = recv(sockfd, buf_response, 2048, 0);
-
-  if (bytes_received < (int)h->length) {
+  char *buf_response = malloc(h->length);
+  int bytes_received = recv(sockfd, buf_response, h->length, 0);
+  if (bytes_received < 0) {
+    fprintf(stderr, "recv failed: %s\n", strerror(errno));
+    return_socketfd = -1;
+    goto exit;
+  }
+  if (bytes_received != (int)h->length) {
     fprintf(stderr, "Unexpected peer response: got %d bytes, want %ld bytes\n", bytes_received,
             h->length);
     return_socketfd = -1;
@@ -141,6 +151,7 @@ int perform_handshake(peer *p, handshake_msg *h)
   return_socketfd = sockfd;
 
 exit:
+  free(buf_response);
   freeaddrinfo(hints);
   freeaddrinfo(res);
   return return_socketfd;
