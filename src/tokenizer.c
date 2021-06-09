@@ -163,7 +163,7 @@ int tokenize_list_dict_end(tokenizer *t)
   return t->_status_fn(t);
 }
 
-tokenizer *init_tokenizer(const char *data, long unsigned data_size)
+tokenizer *init_tokenizer(const char *data, size_t data_size)
 {
   tokenizer *t = malloc(sizeof(tokenizer));
   t->data_size = data_size;
