@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "handshake.h"
+#include "message.h"
+
 peer *init_peer(const unsigned char peer_repr[PEER_BLOB_SIZE])
 {
   peer *p = malloc(sizeof(peer));
@@ -18,5 +21,17 @@ void free_peer(peer *p) { free(p); }
 int handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
                    const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
-  return -1;
+  int out_code = 0;
+  handshake_msg *h = init_handshake_msg(peer_id, info_hash);
+  int sockfd = perform_handshake(p, h);
+  if (sockfd <= 0) {
+    fprintf(stderr, "perform_handshake failed\n");
+    out_code = -1;
+    goto exit;
+  }
+  p->sockfd = sockfd;
+
+exit:
+  free_handshake_msg(h);
+  return out_code;
 }

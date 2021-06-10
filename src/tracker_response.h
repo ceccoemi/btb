@@ -8,7 +8,7 @@ typedef struct
 {
   long interval;
   peer **peers;
-  long num_peers;
+  size_t num_peers;
 } tracker_response;
 
 tracker_response *init_tracker_response();

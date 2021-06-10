@@ -1,12 +1,12 @@
 #include <stdio.h>
 
 #include "bitfield_test.h"
+#include "client_test.h"
 #include "file_buf_test.h"
 #include "peer_test.h"
 #include "pieces_queue_test.h"
 #include "tokenizer_test.h"
 #include "torrent_file_test.h"
-#include "tracker_response_test.h"
 
 int main(void)
 {
@@ -38,14 +38,14 @@ int main(void)
   fprintf(stdout, "\ttest_init_peer\n");
   test_init_peer();
 
-  fprintf(stdout, "\ttest_contact_tracker\n");
-  test_contact_tracker();
-
   fprintf(stdout, "\ttest_bitfield\n");
   test_bitfield();
 
   fprintf(stdout, "\ttest_pieces_queue\n");
   test_pieces_queue();
+
+  fprintf(stdout, "\ttest_client\n");
+  test_client();
 
   fprintf(stdout, "done\n");
 }
