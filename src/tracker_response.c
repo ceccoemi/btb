@@ -119,7 +119,7 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
     free(peer_repr);
   }
   free_tokenizer(tk);
-  fprintf(stdout, "tracker replied with %zu peers\n", r->num_peers);
+  fprintf(stdout, "tracker replied with %lu peers\n", r->num_peers);
   return 0;
 
 tokenizer_error:

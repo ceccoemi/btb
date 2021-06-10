@@ -150,8 +150,7 @@ int perform_handshake(peer *p, handshake_msg *h)
     goto exit;
   }
   free(buf_response);
-  fprintf(stdout, "performed handshake with peer %s:%s, socket %d\n", peer_addr, peer_port,
-          sockfd);
+  fprintf(stdout, "performed handshake with peer %s on port %s\n", peer_addr, peer_port);
   return_socketfd = sockfd;
 
 exit:

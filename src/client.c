@@ -26,11 +26,16 @@ void download_torrent(char *torrent_file_path)
   }
   for (long i = 0; i < r->num_peers; i++) {
     peer *p = r->peers[i];
-    int out = handshake_peer(p, my_peer_id, tf->info_hash);
+    int out;
+    out = handshake_peer(p, my_peer_id, tf->info_hash);
     if (out != 0) {
       fprintf(stderr, "handshake_peer failed\n");
-    } else {
-      break;
+      continue;
+    }
+    out = receive_bitfield(p);
+    if (out != 0) {
+      fprintf(stderr, "receive_bitfield failed\n");
+      continue;
     }
   }
 

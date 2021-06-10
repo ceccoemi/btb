@@ -13,15 +13,22 @@ peer *init_peer(const unsigned char peer_repr[PEER_BLOB_SIZE])
   memcpy(p->address, peer_repr, PEER_ADDR_SIZE);
   p->port = (peer_repr[PEER_ADDR_SIZE] << 8) + peer_repr[PEER_ADDR_SIZE + 1];  // Big endian
   p->sockfd = 0;
+  p->bf = NULL;
   return p;
 }
 
-void free_peer(peer *p) { free(p); }
+void free_peer(peer *p)
+{
+  if (p == NULL) return;
+  free_bitfield(p->bf);
+  free(p);
+}
 
 int handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
                    const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
   int out_code = 0;
+
   handshake_msg *h = init_handshake_msg(peer_id, info_hash);
   int sockfd = perform_handshake(p, h);
   if (sockfd <= 0) {
@@ -33,5 +40,24 @@ int handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
 
 exit:
   free_handshake_msg(h);
+  return out_code;
+}
+
+int receive_bitfield(peer *p)
+{
+  int out_code = 0;
+
+  if (p->sockfd == 0) {
+    fprintf(stderr, "the handshake has not been performed with this peer\n");
+    goto exit;
+  }
+
+  fprintf(stdout, "reading bitfield\n");
+  message *msg = read_message(p->sockfd);
+  p->bf = init_bitfield(msg->payload, msg->payload_len);
+  fprintf(stdout, "read bitfield done\n");
+
+exit:
+  free_message(msg);
   return out_code;
 }
