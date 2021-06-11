@@ -54,10 +54,70 @@ int receive_bitfield(peer *p)
 
   fprintf(stdout, "reading bitfield\n");
   message *msg = read_message(p->sockfd);
+  if (msg == NULL) {
+    fprintf(stderr, "read_message failed\n");
+    out_code = -1;
+    goto exit;
+  }
   p->bf = init_bitfield(msg->payload, msg->payload_len);
-  fprintf(stdout, "read bitfield done\n");
+  fprintf(stdout, "obtained bitfield from peer\n");
 
 exit:
   free_message(msg);
   return out_code;
+}
+
+int send_interested(peer *p)
+{
+  int out_code = 0;
+
+  if (p->sockfd == 0) {
+    fprintf(stderr, "the handshake has not been performed with this peer\n");
+    out_code = -1;
+    goto exit;
+  }
+
+  fprintf(stdout, "sending \"Interested\" message\n");
+  message *msg = create_message(MSG_INTERESTED, 0, NULL);
+  int bytes_sent = send_message(p->sockfd, msg);
+  if (bytes_sent <= 0) {
+    fprintf(stderr, "send_message failed\n");
+    out_code = -1;
+    goto exit;
+  }
+  fprintf(stdout, "message sent\n");
+
+exit:
+  free_message(msg);
+  return out_code;
+}
+
+bool download_piece(peer *p, size_t piece_index, char *piece_hash)
+{
+  bool rst = false;
+
+  if (p->sockfd == 0) {
+    fprintf(stderr, "the handshake has not been performed with this peer\n");
+    goto exit;
+  }
+
+  if (p->bf == NULL) {
+    fprintf(stderr, "the peer didn't sent the bitfield\n");
+    goto exit;
+  }
+
+  fprintf(stdout, "trying to download piece #%lu\n", piece_index);
+
+  if (!has_piece(p->bf, piece_index)) {
+    fprintf(stderr, "the peer didn't have piece #%lu\n", piece_index);
+    goto exit;
+  }
+  fprintf(stdout, "the peer have piece #%lu\n", piece_index);
+
+  // TODO: download piece
+
+  rst = true;
+
+exit:
+  return rst;
 }

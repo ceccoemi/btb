@@ -37,6 +37,7 @@ bool is_done(pieces_queue* q)
 
 void free_pieces_queue(pieces_queue* q)
 {
+  if (q == NULL) return;
   free_bitfield(q->current_bitfield);
   free(q);
 }

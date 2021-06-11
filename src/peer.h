@@ -1,6 +1,7 @@
 #pragma once
 
 #include <openssl/sha.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "bitfield.h"
@@ -32,3 +33,10 @@ int handshake_peer(peer *, const char[PEER_ID_LENGTH], const unsigned char[SHA_D
 // Receive the bitfield of the peer.
 // This function must be called after perfoming the handshake.
 int receive_bitfield(peer *);
+
+// Send an "Interested" message to the input peer.
+// This message should be sent before start to download pieces.
+int send_interested(peer *);
+
+// Try to download the piece with the specified index.
+bool download_piece(peer *, size_t piece_index, char *piece_hash);
