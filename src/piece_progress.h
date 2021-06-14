@@ -5,6 +5,7 @@
 typedef struct piece_progress
 {
   size_t index;
+  size_t size;
   char *buf;
   size_t downloaded;
   size_t requested;

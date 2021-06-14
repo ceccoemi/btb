@@ -24,31 +24,32 @@ void free_peer(peer *p)
   free(p);
 }
 
-int handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
-                   const unsigned char info_hash[SHA_DIGEST_LENGTH])
+bool handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
+                    const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
-  int out_code = 0;
+  bool ok = true;
 
   handshake_msg *h = init_handshake_msg(peer_id, info_hash);
   int sockfd = perform_handshake(p, h);
   if (sockfd <= 0) {
     fprintf(stderr, "perform_handshake failed\n");
-    out_code = -1;
+    ok = false;
     goto exit;
   }
   p->sockfd = sockfd;
 
 exit:
   free_handshake_msg(h);
-  return out_code;
+  return ok;
 }
 
-int receive_bitfield(peer *p)
+bool receive_bitfield(peer *p)
 {
-  int out_code = 0;
+  bool ok = true;
 
   if (p->sockfd == 0) {
     fprintf(stderr, "the handshake has not been performed with this peer\n");
+    ok = false;
     goto exit;
   }
 
@@ -56,7 +57,7 @@ int receive_bitfield(peer *p)
   message *msg = read_message(p->sockfd);
   if (msg == NULL) {
     fprintf(stderr, "read_message failed\n");
-    out_code = -1;
+    ok = false;
     goto exit;
   }
   p->bf = init_bitfield(msg->payload, msg->payload_len);
@@ -64,16 +65,16 @@ int receive_bitfield(peer *p)
 
 exit:
   free_message(msg);
-  return out_code;
+  return ok;
 }
 
-int send_interested(peer *p)
+bool send_interested(peer *p)
 {
-  int out_code = 0;
+  bool ok = true;
 
   if (p->sockfd == 0) {
     fprintf(stderr, "the handshake has not been performed with this peer\n");
-    out_code = -1;
+    ok = false;
     goto exit;
   }
 
@@ -82,19 +83,19 @@ int send_interested(peer *p)
   int bytes_sent = send_message(p->sockfd, msg);
   if (bytes_sent <= 0) {
     fprintf(stderr, "send_message failed\n");
-    out_code = -1;
+    ok = false;
     goto exit;
   }
   fprintf(stdout, "message sent\n");
 
 exit:
   free_message(msg);
-  return out_code;
+  return ok;
 }
 
-bool download_piece(peer *p, size_t piece_index, char *piece_hash)
+bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
 {
-  bool rst = false;
+  bool ok = false;
 
   if (p->sockfd == 0) {
     fprintf(stderr, "the handshake has not been performed with this peer\n");
@@ -106,18 +107,22 @@ bool download_piece(peer *p, size_t piece_index, char *piece_hash)
     goto exit;
   }
 
-  fprintf(stdout, "trying to download piece #%lu\n", piece_index);
+  fprintf(stdout, "trying to download piece #%lu\n", pp->index);
 
-  if (!has_piece(p->bf, piece_index)) {
-    fprintf(stderr, "the peer didn't have piece #%lu\n", piece_index);
+  if (!has_piece(p->bf, pp->index)) {
+    fprintf(stderr, "the peer didn't have piece #%lu\n", pp->index);
     goto exit;
   }
-  fprintf(stdout, "the peer have piece #%lu\n", piece_index);
+  fprintf(stdout, "the peer have piece #%lu\n", pp->index);
+
+  // Send request message
+  message *msg = create_message(MSG_REQUEST, , );
+  free_message(msg);
 
   // TODO: download piece
 
-  rst = true;
+  ok = true;
 
 exit:
-  return rst;
+  return ok;
 }
