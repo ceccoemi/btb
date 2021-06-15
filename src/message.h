@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -28,7 +29,8 @@ message* read_message(int);
 
 message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* payload);
 
-// Send a message on a socket and returns the number of bytes sent
-int send_message(int, message*);
+// Send a message on a socket.
+// It returns true if it succeeds.
+bool send_message(int, message*);
 
 void free_message(message*);

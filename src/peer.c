@@ -95,15 +95,17 @@ exit:
 
 bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
 {
-  bool ok = false;
+  bool ok = true;
 
   if (p->sockfd == 0) {
     fprintf(stderr, "the handshake has not been performed with this peer\n");
+    ok = false;
     goto exit;
   }
 
   if (p->bf == NULL) {
     fprintf(stderr, "the peer didn't sent the bitfield\n");
+    ok = false;
     goto exit;
   }
 
@@ -111,17 +113,52 @@ bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
 
   if (!has_piece(p->bf, pp->index)) {
     fprintf(stderr, "the peer didn't have piece #%lu\n", pp->index);
+    ok = false;
     goto exit;
   }
   fprintf(stdout, "the peer have piece #%lu\n", pp->index);
 
-  // Send request message
-  message *msg = create_message(MSG_REQUEST, , );
-  free_message(msg);
-
-  // TODO: download piece
-
-  ok = true;
+  size_t block_size = 16384;  // 2^14 bytes
+  while (pp->downloaded <= pp->size) {
+    // Send request message
+    size_t payload_len = 8;  // 4 bytes piece index + 4 bytes block offset
+    unsigned char *payload = malloc(sizeof(payload_len));
+    // Convert to a Big Endian representation.
+    payload[0] = pp->index >> 24;
+    payload[1] = pp->index >> 16;
+    payload[2] = pp->index >> 8;
+    payload[3] = pp->index;
+    size_t block_offset = pp->downloaded;
+    payload[4] = block_offset >> 24;
+    payload[5] = block_offset >> 16;
+    payload[6] = block_offset >> 8;
+    payload[7] = block_offset;
+    fprintf(stdout, "requesting block %lu of piece %lu\n", block_offset, pp->index);
+    message *msg_request = create_message(MSG_REQUEST, payload_len, payload);
+    free(payload);
+    bool ok = send_message(p->sockfd, msg_request);
+    free_message(msg_request);
+    if (!ok) {
+      fprintf(stderr, "send_message failed\n");
+      ok = false;
+      goto exit;
+    }
+    message *msg = read_message(p->sockfd);
+    if (msg == NULL) {
+      fprintf(stderr, "read_message failed\n");
+      ok = false;
+      goto exit;
+    }
+    if (msg->id != MSG_PIECE) {
+      fprintf(stdout,
+              "the peer didn't reply with a \"Piece\" message, got message ID %du\n. Skipping...",
+              msg->id);
+      free_message(msg);
+      continue;
+      pp->downloaded += block_size;
+    }
+    free_message(msg);
+  }
 
 exit:
   return ok;

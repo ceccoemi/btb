@@ -63,10 +63,12 @@ message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* paylo
   return msg;
 }
 
-int send_message(int peer_socket, message* msg)
+bool send_message(int sockfd, message* msg)
 {
+  bool ok = true;
+
   struct pollfd pfds[1];
-  pfds[0].fd = peer_socket;
+  pfds[0].fd = sockfd;
   pfds[0].events = POLLOUT;
   int num_events = poll(pfds, 1, MESSAGE_SEND_TIMEOUT_MSEC);
   if (num_events == 0) {
@@ -77,7 +79,8 @@ int send_message(int peer_socket, message* msg)
 
   if (!happened) {
     fprintf(stderr, "unexpected event: %d\n", happened);
-    return -1;
+    ok = false;
+    return ok;
   }
 
   // 4 bytes for msg len and 1 byte for msg ID
@@ -90,9 +93,12 @@ int send_message(int peer_socket, message* msg)
   msg_data[3] = (1 + msg->payload_len);
   msg_data[4] = msg->id;
   memcpy(msg_data + 4, msg->payload, msg->payload_len);
-  int bytes_sent = send(peer_socket, msg_data, msg_data_len, 0);
+  int bytes_sent = send(sockfd, msg_data, msg_data_len, 0);
   free(msg_data);
-  return bytes_sent;
+  if (bytes_sent != msg_data_len) {
+    ok = false;
+  }
+  return ok;
 }
 
 void free_message(message* m)
