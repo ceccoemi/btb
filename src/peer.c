@@ -121,7 +121,7 @@ bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
   size_t block_size = 16384;  // 2^14 bytes
   while (pp->downloaded <= pp->size) {
     // Send request message
-    size_t payload_len = 8;  // 4 bytes piece index + 4 bytes block offset
+    size_t payload_len = 12;  // 4 bytes piece index + 4 bytes block offset + 4 bytes block length
     unsigned char *payload = malloc(sizeof(payload_len));
     // Convert to a Big Endian representation.
     payload[0] = pp->index >> 24;
@@ -133,7 +133,15 @@ bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
     payload[5] = block_offset >> 16;
     payload[6] = block_offset >> 8;
     payload[7] = block_offset;
-    fprintf(stdout, "requesting block %lu of piece %lu\n", block_offset, pp->index);
+    payload[8] = block_size >> 24;
+    payload[9] = block_size >> 16;
+    payload[10] = block_size >> 8;
+    payload[11] = block_size;
+    fprintf(stdout, "%u %u %u %u %u %u %u %u %u %u %u %u\n", payload[0], payload[1], payload[2],
+            payload[3], payload[4], payload[5], payload[6], payload[7], payload[8], payload[9],
+            payload[10], payload[11]);
+    fprintf(stdout, "requesting a block with offset %lu bytes of piece %lu\n", block_offset,
+            pp->index);
     message *msg_request = create_message(MSG_REQUEST, payload_len, payload);
     free(payload);
     bool ok = send_message(p->sockfd, msg_request);
@@ -151,12 +159,12 @@ bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
     }
     if (msg->id != MSG_PIECE) {
       fprintf(stdout,
-              "the peer didn't reply with a \"Piece\" message, got message ID %du\n. Skipping...",
+              "the peer didn't reply with a \"Piece\" message, got message ID %u\n. Skipping...",
               msg->id);
       free_message(msg);
       continue;
-      pp->downloaded += block_size;
     }
+    pp->downloaded += block_size;
     free_message(msg);
   }
 

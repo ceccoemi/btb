@@ -28,7 +28,7 @@ message* read_message(int sockfd)
   unsigned char buf[2048];
   int bytes_received = recv(sockfd, buf, 2048, 0);
   if (bytes_received < 5) {
-    fprintf(stderr, "received less than 5 bytes from peer\n");
+    fprintf(stderr, "received less than 5 bytes from peer: got %d bytes\n", bytes_received);
     return NULL;
   }
   if (buf[0] == 255 && buf[1] == 255 && buf[2] == 255 && buf[3] == 255) {

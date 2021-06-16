@@ -47,19 +47,19 @@ void download_torrent(char *torrent_file_path)
       fprintf(stderr, "send_interested failed\n");
       continue;
     }
-    while (!is_done(q)) {
-      size_t piece_index = get_piece_index(q);
-      piece_progress *pp = init_piece_progress(piece_index, tf->piece_length);
-      ok = download_piece(p, pp, tf->piece_hashes[piece_index]);
-      if (!ok) {
-        fprintf(stderr, "download_piece failed\n");
-        free_piece_progress(pp);
-        continue;
-      }
-      // TODO: write pp->buf into output file
+    // while (!is_done(q)) {
+    size_t piece_index = get_piece_index(q);
+    piece_progress *pp = init_piece_progress(piece_index, tf->piece_length);
+    ok = download_piece(p, pp, tf->piece_hashes[piece_index]);
+    if (!ok) {
+      fprintf(stderr, "download_piece failed\n");
       free_piece_progress(pp);
-      mark_as_done(q, piece_index);
+      goto exit;
     }
+    // TODO: write pp->buf into output file
+    free_piece_progress(pp);
+    mark_as_done(q, piece_index);
+    //}
     break;  // For now, stop here
   }
 
