@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "big_endian_test.h"
 #include "bitfield_test.h"
 #include "client_test.h"
 #include "file_buf_test.h"
@@ -12,40 +13,43 @@ int main(void)
 {
   fprintf(stdout, "Running tests...\n");
 
-  fprintf(stdout, "\ttest_tokenize_int\n");
-  test_tokenize_int();
-  fprintf(stdout, "\ttest_tokenize_str\n");
-  test_tokenize_str();
-  fprintf(stdout, "\ttest_tokenize_int_str\n");
-  test_tokenize_int_str();
-  fprintf(stdout, "\ttest_tokenize_list\n");
-  test_tokenize_list();
-  fprintf(stdout, "\ttest_tokenize_nested_list\n");
-  test_tokenize_nested_list();
-  fprintf(stdout, "\ttest_tokenize_dict\n");
-  test_tokenize_dict();
-  fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
-  test_tokenize_str_with_null_char();
+  // fprintf(stdout, "\ttest_tokenize_int\n");
+  // test_tokenize_int();
+  // fprintf(stdout, "\ttest_tokenize_str\n");
+  // test_tokenize_str();
+  // fprintf(stdout, "\ttest_tokenize_int_str\n");
+  // test_tokenize_int_str();
+  // fprintf(stdout, "\ttest_tokenize_list\n");
+  // test_tokenize_list();
+  // fprintf(stdout, "\ttest_tokenize_nested_list\n");
+  // test_tokenize_nested_list();
+  // fprintf(stdout, "\ttest_tokenize_dict\n");
+  // test_tokenize_dict();
+  // fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
+  // test_tokenize_str_with_null_char();
 
-  fprintf(stdout, "\ttest_read_file\n");
-  test_read_file();
+  // fprintf(stdout, "\ttest_read_file\n");
+  // test_read_file();
 
-  fprintf(stdout, "\ttest_sample_torrent\n");
-  test_sample_torrent();
-  fprintf(stdout, "\ttest_debian_torrent\n");
-  test_debian_torrent();
+  fprintf(stdout, "\ttest_int_to_big_endian\n");
+  test_int_to_big_endian();
 
-  fprintf(stdout, "\ttest_init_peer\n");
-  test_init_peer();
+  // fprintf(stdout, "\ttest_sample_torrent\n");
+  // test_sample_torrent();
+  // fprintf(stdout, "\ttest_debian_torrent\n");
+  // test_debian_torrent();
 
-  fprintf(stdout, "\ttest_bitfield\n");
-  test_bitfield();
+  // fprintf(stdout, "\ttest_init_peer\n");
+  // test_init_peer();
 
-  fprintf(stdout, "\ttest_pieces_queue\n");
-  test_pieces_queue();
+  // fprintf(stdout, "\ttest_bitfield\n");
+  // test_bitfield();
 
-  fprintf(stdout, "\ttest_client\n");
-  test_client();
+  // fprintf(stdout, "\ttest_pieces_queue\n");
+  // test_pieces_queue();
+
+  // fprintf(stdout, "\ttest_client\n");
+  // test_client();
 
   fprintf(stdout, "done\n");
 }

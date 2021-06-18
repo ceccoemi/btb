@@ -19,7 +19,7 @@ $(TARGET): tokenizer.o $(SRC_DIR)/main.c
 test: build
 	@ ./$(TARGET_TEST)
 
-build: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o handshake.o message.o bitfield.o bitfield_test.o pieces_queue.o pieces_queue_test.o client.o client_test.o piece_progress.o $(TEST_DIR)/main.c
+build: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o handshake.o message.o bitfield.o bitfield_test.o pieces_queue.o pieces_queue_test.o client.o client_test.o piece_progress.o big_endian.o big_endian_test.o $(TEST_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 
 piece_progress.o: $(SRC_DIR)/piece_progress.c
@@ -62,6 +62,12 @@ torrent_file_test.o: $(TEST_DIR)/torrent_file_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 torrent_file.o: $(SRC_DIR)/torrent_file.c
+	@ $(CC) $(CFLAGS) -c $?
+
+big_endian_test.o: $(TEST_DIR)/big_endian_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+big_endian.o: $(SRC_DIR)/big_endian.c
 	@ $(CC) $(CFLAGS) -c $?
 
 file_buf_test.o: $(TEST_DIR)/file_buf_test.c
