@@ -1,15 +1,14 @@
 #pragma once
 
 #include "peer.h"
+#include "peer_id.h"
 #include "torrent_file.h"
-
-#define PEER_ID_LENGTH 20
 
 typedef struct
 {
   long interval;
   peer **peers;
-  long num_peers;
+  size_t num_peers;
 } tracker_response;
 
 tracker_response *init_tracker_response();

@@ -27,6 +27,7 @@ torrent_file *init_torrent_file()
 
 int parse_torrent_file(torrent_file *tr, const char *fname)
 {
+  fprintf(stdout, "parsing %s\n", fname);
   file_buf *buf = read_file(fname);
   tokenizer *tk = init_tokenizer(buf->data, buf->size);
   free_file_buf(buf);
@@ -233,6 +234,7 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
   }
 
   free_tokenizer(tk);
+  fprintf(stdout, "parsing done\n");
   return exit_code;
 }
 

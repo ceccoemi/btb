@@ -1,7 +1,11 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#define MSG_LEN_BYTES 4
+#define MSG_ID_BYTES 1
 
 #define MSG_CHOKE 0
 #define MSG_UNCHOKE 1
@@ -26,9 +30,10 @@ typedef struct message
 // Read a message from a socket
 message* read_message(int);
 
-message* create_message(uint8_t, size_t, unsigned char*);
+message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* payload);
 
-// Send a message on a socket and returns the number of bytes sent
-int send_message(int, message*);
+// Send a message on a socket.
+// It returns true if it succeeds.
+bool send_message(int, message*);
 
 void free_message(message*);

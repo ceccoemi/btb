@@ -66,6 +66,7 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
   struct response_data *response = malloc(sizeof(struct response_data));
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_response);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
+  fprintf(stdout, "contacting tracker\n");
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   curl_global_cleanup();
@@ -118,6 +119,7 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
     free(peer_repr);
   }
   free_tokenizer(tk);
+  fprintf(stdout, "tracker replied with %lu peers\n", r->num_peers);
   return 0;
 
 tokenizer_error:
