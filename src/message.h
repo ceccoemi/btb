@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MSG_LEN_BYTES 4
+#define MSG_ID_BYTES 1
+
 #define MSG_CHOKE 0
 #define MSG_UNCHOKE 1
 #define MSG_INTERESTED 2
