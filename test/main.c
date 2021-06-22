@@ -31,8 +31,12 @@ int main(void)
   // fprintf(stdout, "\ttest_read_file\n");
   // test_read_file();
 
-  fprintf(stdout, "\ttest_int_to_big_endian\n");
-  test_int_to_big_endian();
+  fprintf(stdout, "\ttest_lu_to_big_endian_4_bytes\n");
+  test_lu_to_big_endian_4_bytes();
+  fprintf(stdout, "\ttest_lu_to_big_endian_2_bytes\n");
+  test_lu_to_big_endian_2_bytes();
+  fprintf(stdout, "\ttest_lu_to_big_endian_1_bytes\n");
+  test_lu_to_big_endian_1_bytes();
 
   // fprintf(stdout, "\ttest_sample_torrent\n");
   // test_sample_torrent();

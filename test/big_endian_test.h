@@ -1,3 +1,7 @@
 #pragma once
 
-void test_int_to_big_endian(void);
+void test_lu_to_big_endian_4_bytes(void);
+
+void test_lu_to_big_endian_2_bytes(void);
+
+void test_lu_to_big_endian_1_bytes(void);
