@@ -66,3 +66,19 @@ void test_lu_to_big_endian_1_bytes()
   }
   free(buf);
 }
+
+void test_big_endian_to_lu()
+{
+  size_t buf_size = 4;
+  // 1234 -> 00000000 00000000 00000100 11010010
+  unsigned char buf[buf_size];
+  buf[0] = 0;
+  buf[1] = 0;
+  buf[2] = 4;
+  buf[3] = 210;
+  unsigned long want = 1234;
+  unsigned long got = big_endian_to_lu(buf, buf_size);
+  if (got != want) {
+    fprintf(stderr, "big_endian_to_lu: got %lu, want %lu\n", got, want);
+  }
+}
