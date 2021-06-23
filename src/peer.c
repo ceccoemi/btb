@@ -4,14 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "big_endian.h"
 #include "handshake.h"
 #include "message.h"
 
-peer *init_peer(const unsigned char peer_repr[PEER_BLOB_SIZE])
+peer *init_peer(unsigned char peer_repr[PEER_BLOB_SIZE])
 {
   peer *p = malloc(sizeof(peer));
   memcpy(p->address, peer_repr, PEER_ADDR_SIZE);
-  p->port = (peer_repr[PEER_ADDR_SIZE] << 8) + peer_repr[PEER_ADDR_SIZE + 1];  // Big endian
+  p->port = big_endian_to_lu(peer_repr + PEER_ADDR_SIZE, PEER_PORT_SIZE);
   p->sockfd = 0;
   p->bf = NULL;
   return p;
@@ -24,8 +25,8 @@ void free_peer(peer *p)
   free(p);
 }
 
-bool handshake_peer(peer *p, const char peer_id[PEER_ID_LENGTH],
-                    const unsigned char info_hash[SHA_DIGEST_LENGTH])
+bool handshake_peer(peer *p, char peer_id[PEER_ID_LENGTH],
+                    unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
   bool ok = true;
 
@@ -121,22 +122,13 @@ bool download_piece(peer *p, piece_progress *pp, char *piece_hash)
   size_t block_size = 16384;  // 2^14 bytes
   while (pp->downloaded <= pp->size) {
     // Send request message
-    size_t payload_len = 12;  // 4 bytes piece index + 4 bytes block offset + 4 bytes block length
+    size_t payload_len = PIECE_INDEX_BYTES + BLOCK_OFFSET_BYTES + BLOCK_LENGTH_BYTES;
     unsigned char *payload = malloc(payload_len);
-    // Convert to a Big Endian representation.
-    payload[0] = pp->index >> 24;
-    payload[1] = pp->index >> 16;
-    payload[2] = pp->index >> 8;
-    payload[3] = pp->index;
+    lu_to_big_endian(pp->index, payload, PIECE_INDEX_BYTES);
     size_t block_offset = pp->downloaded;
-    payload[4] = block_offset >> 24;
-    payload[5] = block_offset >> 16;
-    payload[6] = block_offset >> 8;
-    payload[7] = block_offset;
-    payload[8] = block_size >> 24;
-    payload[9] = block_size >> 16;
-    payload[10] = block_size >> 8;
-    payload[11] = block_size;
+    lu_to_big_endian(block_offset, payload + PIECE_INDEX_BYTES, BLOCK_OFFSET_BYTES);
+    lu_to_big_endian(block_size, payload + PIECE_INDEX_BYTES + BLOCK_OFFSET_BYTES,
+                     BLOCK_LENGTH_BYTES);
     fprintf(stdout, "requesting a block with offset %lu bytes of piece %lu\n", block_offset,
             pp->index);
     message *msg_request = create_message(MSG_REQUEST, payload_len, payload);

@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include "big_endian.h"
+
 message* read_message(int sockfd)
 {
   struct pollfd pfds[1];
@@ -25,6 +27,7 @@ message* read_message(int sockfd)
     fprintf(stderr, "unexpected event: %d\n", happened);
     return NULL;
   }
+  // TODO: custom buf size
   unsigned char buf[2048];
   int bytes_received = recv(sockfd, buf, 2048, 0);
   if (bytes_received < 5) {
@@ -35,7 +38,7 @@ message* read_message(int sockfd)
     fprintf(stderr, "unknown data from peer\n");
     return NULL;
   }
-  size_t message_length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3];
+  size_t message_length = big_endian_to_lu(buf, 4);
   uint8_t message_id = buf[4];
   if ((unsigned int)bytes_received < message_length + 4) {
     fprintf(stderr, "bytes received (%d) are less than message length (%lu)\n", bytes_received,
@@ -86,11 +89,7 @@ bool send_message(int sockfd, message* msg)
 
   size_t msg_data_len = MSG_LEN_BYTES + MSG_ID_BYTES + msg->payload_len;
   unsigned char* msg_data = malloc(msg_data_len);
-
-  msg_data[0] = (1 + msg->payload_len) >> 24;
-  msg_data[1] = (1 + msg->payload_len) >> 16;
-  msg_data[2] = (1 + msg->payload_len) >> 8;
-  msg_data[3] = (1 + msg->payload_len);
+  lu_to_big_endian(1 + msg->payload_len, msg_data, MSG_LEN_BYTES);
   msg_data[4] = msg->id;
   memcpy(msg_data + MSG_LEN_BYTES + MSG_ID_BYTES, msg->payload, msg->payload_len);
   int bytes_sent = send(sockfd, msg_data, msg_data_len, 0);

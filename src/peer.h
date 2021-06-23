@@ -8,7 +8,8 @@
 #include "piece_progress.h"
 
 #define PEER_BLOB_SIZE 6  // number of bytes to represent a peer
-#define PEER_ADDR_SIZE 4
+#define PEER_ADDR_SIZE 4  // number of bytes to represent a peer address
+#define PEER_PORT_SIZE 2  // number of bytes to represent a peer port
 
 typedef struct
 {
@@ -21,14 +22,14 @@ typedef struct
   bitfield *bf;
 } peer;
 
-peer *init_peer(const unsigned char[PEER_BLOB_SIZE]);
+peer *init_peer(unsigned char[PEER_BLOB_SIZE]);
 
 void free_peer(peer *p);
 
 // Perform the handshake with the input peer.
 // This method must be called before sending and/or receveing messages
 // It returns true if it succeeds.
-bool handshake_peer(peer *, const char[PEER_ID_LENGTH], const unsigned char[SHA_DIGEST_LENGTH]);
+bool handshake_peer(peer *, char[PEER_ID_LENGTH], unsigned char[SHA_DIGEST_LENGTH]);
 
 // Receive the bitfield of the peer.
 // This function must be called after perfoming the handshake.

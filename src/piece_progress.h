@@ -2,6 +2,10 @@
 
 #include <stddef.h>
 
+#define PIECE_INDEX_BYTES 4
+#define BLOCK_OFFSET_BYTES 4
+#define BLOCK_LENGTH_BYTES 4
+
 typedef struct piece_progress
 {
   size_t index;
