@@ -25,6 +25,13 @@ void set_piece(bitfield *b, size_t index)
   b->data[byte_index] |= 1 << (7 - offset);
 }
 
+void unset_piece(bitfield *b, size_t index)
+{
+  int byte_index = index / 8;
+  int offset = index % 8;
+  b->data[byte_index] &= 0 << (7 - offset);
+}
+
 void free_bitfield(bitfield *b)
 {
   if (b == NULL) return;

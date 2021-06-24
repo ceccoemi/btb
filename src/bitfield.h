@@ -15,4 +15,6 @@ bool has_piece(bitfield *, size_t);
 
 void set_piece(bitfield *, size_t);
 
+void unset_piece(bitfield *, size_t);
+
 void free_bitfield(bitfield *);
