@@ -5,7 +5,7 @@
 
 #include "peer.h"
 #include "piece_progress.h"
-#include "pieces_queue.h"
+#include "pieces_pool.h"
 #include "tokenizer.h"
 #include "torrent_file.h"
 #include "tracker_response.h"
@@ -28,7 +28,7 @@ void download_torrent(char *torrent_file_path)
     fprintf(stderr, "contact_tracker failed\n");
     goto exit;
   }
-  pieces_queue *q = init_pieces_queue(tf->num_pieces);
+  pieces_pool *q = init_pieces_pool(tf->num_pieces);
   // for (long i = 0; i < r->num_peers; i++) {
   //  peer *p = r->peers[i];
   //  bool ok;
@@ -64,7 +64,7 @@ void download_torrent(char *torrent_file_path)
   //}
 
 exit:
-  free_pieces_queue(q);
+  free_pieces_pool(q);
   free_tracker_response(r);
   free_torrent_file(tf);
 }
