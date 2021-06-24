@@ -10,9 +10,12 @@ typedef struct pieces_queue
 
 pieces_queue* init_pieces_queue(size_t);
 
+// Get and mark as done the first "undone" piece index.
 size_t get_piece_index(pieces_queue*);
 
-void mark_as_done(pieces_queue*, size_t);
+// Set the input index as "undone",
+// So it can be extracted using get_piece_index.
+void mark_as_undone(pieces_queue*, size_t);
 
 bool is_done(pieces_queue*);
 

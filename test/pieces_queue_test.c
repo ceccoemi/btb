@@ -17,7 +17,7 @@ void test_pieces_queue()
     fprintf(stderr, "wrong index: got %li, want x < %li\n", idx, num_pieces);
     goto exit;
   }
-  mark_as_done(q, 0);
+  // mark_as_done(q, 0);
   for (size_t i = 0; i < num_pieces; i++) {
     idx = get_piece_index(q);
     if (idx >= num_pieces || idx == 0) {
@@ -29,7 +29,7 @@ void test_pieces_queue()
     fprintf(stderr, "is_done should return false\n");
     goto exit;
   }
-  mark_as_done(q, 5);
+  // mark_as_done(q, 5);
   for (size_t i = 0; i < num_pieces; i++) {
     idx = get_piece_index(q);
     if (idx >= num_pieces || idx == 0 || idx == 5) {
@@ -42,7 +42,8 @@ void test_pieces_queue()
     goto exit;
   }
   for (size_t i = 0; i < num_pieces; i++) {
-    mark_as_done(q, i);
+    get_piece_index(q);
+    // mark_as_done(q, i);
   }
   for (size_t i = 0; i < num_pieces; i++) {
     idx = get_piece_index(q);

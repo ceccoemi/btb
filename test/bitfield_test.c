@@ -45,10 +45,28 @@ void test_bitfield()
   }
 
   set_piece(b, 2);
-  set_piece(b, 12);
   if (!has_piece(b, 2)) {
     fprintf(stderr, "should have %d-th piece\n", 2);
   }
+  set_piece(b, 12);
+  if (!has_piece(b, 12)) {
+    fprintf(stderr, "should have %d-th piece\n", 12);
+  }
+
+  unset_piece(b, 12);
+  if (has_piece(b, 12)) {
+    fprintf(stderr, "expected not having %d-th piece\n", 12);
+  }
+  unset_piece(b, 12);
+  if (has_piece(b, 12)) {
+    fprintf(stderr, "expected not having %d-th piece\n", 12);
+  }
+
+  set_piece(b, 12);
+  if (!has_piece(b, 12)) {
+    fprintf(stderr, "should have %d-th piece\n", 12);
+  }
+  set_piece(b, 12);
   if (!has_piece(b, 12)) {
     fprintf(stderr, "should have %d-th piece\n", 12);
   }

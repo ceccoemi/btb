@@ -22,7 +22,7 @@ size_t get_piece_index(pieces_queue* q)
   return q->num_pieces + 1;
 }
 
-void mark_as_done(pieces_queue* q, size_t index) { set_piece(q->current_bitfield, index); }
+void mark_as_undone(pieces_queue* q, size_t index) { set_piece(q->current_bitfield, index); }
 
 bool is_done(pieces_queue* q)
 {
