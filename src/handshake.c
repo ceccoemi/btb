@@ -3,13 +3,11 @@
 #include "handshake.h"
 
 #include <errno.h>
-#include <fcntl.h>
 #include <netdb.h>
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -73,33 +71,16 @@ int perform_handshake(peer *p, handshake_msg *h)
   getaddrinfo(peer_addr, peer_port, hints, &res);
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  fcntl(sockfd, F_SETFL, O_NONBLOCK);  // non-blocking socket
 
   fprintf(stdout, "contacting peer %s on port %s\n", peer_addr, peer_port);
   int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  if (errno != EINPROGRESS) {
-    fprintf(stdout, "connection error: %d\n", err);
+  if (err != 0) {
+    fprintf(stdout, "connect failed: %s\n", strerror(errno));
     return_socketfd = -1;
     goto exit;
   }
 
-  struct pollfd pfds[1];
-  pfds[0].fd = sockfd;
-  pfds[0].events = POLLOUT;
-  int num_events = poll(pfds, 1, HANDSHAKE_TIMEOUT_MSEC);
-  if (num_events == 0) {
-    fprintf(stderr, "timed out\n");
-    return_socketfd = -1;
-    goto exit;
-  }
-  int happened = pfds[0].revents & POLLOUT;
-
-  if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
-    return_socketfd = -1;
-    goto exit;
-  }
-
+  fprintf(stdout, "sending handshake\n");
   int bytes_sent = send(sockfd, h->msg, h->length, 0);
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
@@ -112,21 +93,7 @@ int perform_handshake(peer *p, handshake_msg *h)
     goto exit;
   }
 
-  pfds[0].events = POLLIN;
-  num_events = poll(pfds, 1, HANDSHAKE_TIMEOUT_MSEC);
-  if (num_events == 0) {
-    fprintf(stderr, "timed out\n");
-    return_socketfd = -1;
-    goto exit;
-  }
-  happened = pfds[0].revents & POLLIN;
-
-  if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
-    return_socketfd = -1;
-    goto exit;
-  }
-
+  fprintf(stdout, "receiving handshake\n");
   char *buf_response = malloc(h->length);
   int bytes_received = recv(sockfd, buf_response, h->length, 0);
   if (bytes_received < 0) {
