@@ -13,9 +13,9 @@
 #include <unistd.h>
 
 #include "peer.h"
+#include "peer_id.h"
 
-handshake_msg *init_handshake_msg(const char peer_id[PEER_ID_LENGTH],
-                                  const unsigned char info_hash[SHA_DIGEST_LENGTH])
+handshake_msg *init_handshake_msg(const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
   handshake_msg *h = malloc(sizeof(handshake_msg));
   int pstrlen = 19;  // string length of the <pstr> field.
@@ -40,7 +40,7 @@ handshake_msg *init_handshake_msg(const char peer_id[PEER_ID_LENGTH],
   handshake_last += SHA_DIGEST_LENGTH;
   // Add peer_id
   for (int i = 0; i < PEER_ID_LENGTH; i++) {
-    handshake_last[i] = peer_id[i];
+    handshake_last[i] = MY_PEER_ID[i];
   }
   handshake_last += PEER_ID_LENGTH;
   h->length = handshake_last - h->msg;
