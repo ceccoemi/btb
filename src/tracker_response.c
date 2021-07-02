@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "peer.h"
+#include "peer_id.h"
 #include "tokenizer.h"
 #include "torrent_file.h"
 
@@ -35,12 +36,12 @@ size_t parse_response(void *ptr, size_t size, size_t nmemb, struct response_data
   return size * nmemb;
 }
 
-int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PEER_ID_LENGTH])
+bool contact_tracker(tracker_response *r, torrent_file *tf)
 {
   CURL *curl = curl_easy_init();
   if (curl == NULL) {
     fprintf(stderr, "Failed to initialize curl\n");
-    return -1;
+    return false;
   }
 
   // Build GET request
@@ -48,7 +49,7 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
   strcat(get_request, tf->announce);
   strcat(get_request, "?");
   strcat(get_request, "&peer_id=");
-  strcat(get_request, peer_id);
+  strcat(get_request, MY_PEER_ID);
   strcat(get_request, "&port=6881");
   strcat(get_request, "&uploaded=0");
   strcat(get_request, "&downloaded=0");
@@ -66,15 +67,13 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
   struct response_data *response = malloc(sizeof(struct response_data));
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_response);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
-  fprintf(stdout, "contacting tracker\n");
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   curl_global_cleanup();
   if (out_code != CURLE_OK) {
-    // free(response->data);
     free(response);
     fprintf(stderr, "error in performing the request, curl error code: %d\n", out_code);
-    return -1;
+    return false;
   }
 
   // Parse the response into tracker_response
@@ -119,18 +118,17 @@ int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PE
     free(peer_repr);
   }
   free_tokenizer(tk);
-  fprintf(stdout, "tracker replied with %lu peers\n", r->num_peers);
-  return 0;
+  return true;
 
 tokenizer_error:
   fprintf(stderr, "tokenizer error: %d\n", err);
   free_tokenizer(tk);
-  return -1;
+  return false;
 
 tracker_response_parsing_error:
   fprintf(stderr, "unexpected tracker response: %.*s\n", (int)tk->data_size, tk->data);
   free_tokenizer(tk);
-  return -1;
+  return false;
 }
 
 void free_tracker_response(tracker_response *t)

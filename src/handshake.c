@@ -3,21 +3,19 @@
 #include "handshake.h"
 
 #include <errno.h>
-#include <fcntl.h>
 #include <netdb.h>
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "peer.h"
+#include "peer_id.h"
 
-handshake_msg *init_handshake_msg(const char peer_id[PEER_ID_LENGTH],
-                                  const unsigned char info_hash[SHA_DIGEST_LENGTH])
+handshake_msg *init_handshake_msg(const unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
   handshake_msg *h = malloc(sizeof(handshake_msg));
   int pstrlen = 19;  // string length of the <pstr> field.
@@ -42,7 +40,7 @@ handshake_msg *init_handshake_msg(const char peer_id[PEER_ID_LENGTH],
   handshake_last += SHA_DIGEST_LENGTH;
   // Add peer_id
   for (int i = 0; i < PEER_ID_LENGTH; i++) {
-    handshake_last[i] = peer_id[i];
+    handshake_last[i] = MY_PEER_ID[i];
   }
   handshake_last += PEER_ID_LENGTH;
   h->length = handshake_last - h->msg;
@@ -51,10 +49,9 @@ handshake_msg *init_handshake_msg(const char peer_id[PEER_ID_LENGTH],
 
 void free_handshake_msg(handshake_msg *h)
 {
-  if (h != NULL) {
-    if (h->msg != NULL) free(h->msg);
-    free(h);
-  }
+  if (h == NULL) return;
+  free(h->msg);
+  free(h);
 }
 
 int perform_handshake(peer *p, handshake_msg *h)
@@ -66,43 +63,33 @@ int perform_handshake(peer *p, handshake_msg *h)
   char peer_port[6];  // maximum port number value is 5 digits
   sprintf(peer_port, "%hu", p->port);
 
-  struct addrinfo *hints = calloc(1, sizeof(struct addrinfo));
-  hints->ai_family = AF_UNSPEC;
-  hints->ai_socktype = SOCK_STREAM;
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));  // Make sure that the struct is empty
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
   struct addrinfo *res;
-  getaddrinfo(peer_addr, peer_port, hints, &res);
+  getaddrinfo(peer_addr, peer_port, &hints, &res);
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  fcntl(sockfd, F_SETFL, O_NONBLOCK);  // non-blocking socket
 
   fprintf(stdout, "contacting peer %s on port %s\n", peer_addr, peer_port);
   int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  if (errno != EINPROGRESS) {
-    fprintf(stdout, "connection error: %d\n", err);
+  freeaddrinfo(res);
+  if (err != 0) {
+    fprintf(stdout, "connect failed: %s\n", strerror(errno));
     return_socketfd = -1;
     goto exit;
   }
 
-  struct pollfd pfds[1];
-  pfds[0].fd = sockfd;
-  pfds[0].events = POLLOUT;
-  int num_events = poll(pfds, 1, HANDSHAKE_TIMEOUT_MSEC);
-  if (num_events == 0) {
-    fprintf(stderr, "timed out\n");
-    return_socketfd = -1;
-    goto exit;
-  }
-  int happened = pfds[0].revents & POLLOUT;
-
-  if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
-    return_socketfd = -1;
-    goto exit;
-  }
-
+  fprintf(stdout, "sending handshake\n");
   int bytes_sent = send(sockfd, h->msg, h->length, 0);
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
+    return_socketfd = -1;
+    goto exit;
+  }
+  if (bytes_sent == 0) {
+    fprintf(stderr, "connection lost with peer\n");
     return_socketfd = -1;
     goto exit;
   }
@@ -112,26 +99,18 @@ int perform_handshake(peer *p, handshake_msg *h)
     goto exit;
   }
 
-  pfds[0].events = POLLIN;
-  num_events = poll(pfds, 1, HANDSHAKE_TIMEOUT_MSEC);
-  if (num_events == 0) {
-    fprintf(stderr, "timed out\n");
-    return_socketfd = -1;
-    goto exit;
-  }
-  happened = pfds[0].revents & POLLIN;
-
-  if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
-    return_socketfd = -1;
-    goto exit;
-  }
-
+  fprintf(stdout, "receiving handshake\n");
   char *buf_response = malloc(h->length);
   int bytes_received = recv(sockfd, buf_response, h->length, 0);
   if (bytes_received < 0) {
     free(buf_response);
     fprintf(stderr, "recv failed: %s\n", strerror(errno));
+    return_socketfd = -1;
+    goto exit;
+  }
+  if (bytes_received == 0) {
+    free(buf_response);
+    fprintf(stderr, "connection lost with peer\n");
     return_socketfd = -1;
     goto exit;
   }
@@ -154,8 +133,6 @@ int perform_handshake(peer *p, handshake_msg *h)
   return_socketfd = sockfd;
 
 exit:
-  freeaddrinfo(hints);
-  freeaddrinfo(res);
   return return_socketfd;
 }
 

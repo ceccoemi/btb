@@ -1,5 +1,6 @@
 #include "message.h"
 
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
@@ -13,31 +14,31 @@
 
 message* read_message(int sockfd)
 {
-  struct pollfd pfds[1];
-  pfds[0].fd = sockfd;
-  pfds[0].events = POLLIN;
-  int num_events = poll(pfds, 1, MESSAGE_RECEIVE_TIMEOUT_MSEC);
-  if (num_events == 0) {
-    fprintf(stderr, "Timed out\n");
-    return NULL;
-  }
-  int happened = pfds[0].revents & POLLIN;
-
-  if (!happened) {
-    fprintf(stderr, "unexpected event: %d\n", happened);
-    return NULL;
-  }
   // TODO: custom buf size
   unsigned char buf[2048];
-  int bytes_received = recv(sockfd, buf, 2048, 0);
-  if (bytes_received < 5) {
-    fprintf(stderr, "received less than 5 bytes from peer: got %d bytes\n", bytes_received);
+  int bytes_received;
+  for (int i = 0; i < 5; i++) {
+    bytes_received = recv(sockfd, buf, 2048, 0);
+    fprintf(stdout, "RECEIVED %d BYTES\n", bytes_received);
+  }
+  if (bytes_received < 0) {
+    fprintf(stderr, "recv failed: %s\n", strerror(errno));
     return NULL;
   }
+  if (bytes_received == 0) {
+    fprintf(stderr, "connection lost with peer\n");
+    return NULL;
+  }
+  if (bytes_received < 5) {
+    fprintf(stderr, "unknown data from peer\n");
+    return NULL;
+  }
+  /*
   if (buf[0] == 255 && buf[1] == 255 && buf[2] == 255 && buf[3] == 255) {
     fprintf(stderr, "unknown data from peer\n");
     return NULL;
   }
+  */
   size_t message_length = big_endian_to_lu(buf, 4);
   uint8_t message_id = buf[4];
   if ((unsigned int)bytes_received < message_length + 4) {
@@ -48,7 +49,6 @@ message* read_message(int sockfd)
   message* m = malloc(sizeof(message));
   m->id = message_id;
   m->payload_len = message_length - 1;  // subtract the message ID
-  fprintf(stdout, "message_length: %lu\n", message_length);
   m->payload = malloc(m->payload_len);
   memcpy(m->payload, buf + 5, m->payload_len);
   return m;

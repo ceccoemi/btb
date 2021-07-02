@@ -29,7 +29,7 @@ void free_peer(peer *p);
 // Perform the handshake with the input peer.
 // This method must be called before sending and/or receveing messages
 // It returns true if it succeeds.
-bool handshake_peer(peer *, char[PEER_ID_LENGTH], unsigned char[SHA_DIGEST_LENGTH]);
+bool handshake_peer(peer *, unsigned char[SHA_DIGEST_LENGTH]);
 
 // Receive the bitfield of the peer.
 // This function must be called after perfoming the handshake.
@@ -43,4 +43,4 @@ bool send_interested(peer *);
 
 // Try to download the piece with the specified index from the input peer.
 // It returns true if it succeeds.
-bool download_piece(peer *p, piece_progress *, char *piece_hash);
+bool download_piece(peer *p, piece_progress *pp, char *piece_hash);

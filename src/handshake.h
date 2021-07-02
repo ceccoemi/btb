@@ -5,8 +5,6 @@
 #include "peer.h"
 #include "tracker_response.h"
 
-#define HANDSHAKE_TIMEOUT_MSEC 5000
-
 typedef struct handshake_msg
 {
   char *msg;
@@ -15,8 +13,7 @@ typedef struct handshake_msg
   char *_info_hash_start;
 } handshake_msg;
 
-handshake_msg *init_handshake_msg(const char[PEER_ID_LENGTH],
-                                  const unsigned char[SHA_DIGEST_LENGTH]);
+handshake_msg *init_handshake_msg(const unsigned char[SHA_DIGEST_LENGTH]);
 
 void free_handshake_msg(handshake_msg *);
 

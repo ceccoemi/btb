@@ -1,7 +1,8 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "peer.h"
-#include "peer_id.h"
 #include "torrent_file.h"
 
 typedef struct
@@ -13,7 +14,8 @@ typedef struct
 
 tracker_response *init_tracker_response();
 
-// Contact the tracker identified in the torrent file and return its response.
-int contact_tracker(tracker_response *r, torrent_file *tf, const char peer_id[PEER_ID_LENGTH]);
+// Contact the tracker identified in the torrent file and fill the tracker_response struct.
+// It returns true if it succeeds.
+bool contact_tracker(tracker_response *r, torrent_file *tf);
 
 void free_tracker_response(tracker_response *r);

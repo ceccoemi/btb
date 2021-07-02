@@ -25,12 +25,11 @@ void free_peer(peer *p)
   free(p);
 }
 
-bool handshake_peer(peer *p, char peer_id[PEER_ID_LENGTH],
-                    unsigned char info_hash[SHA_DIGEST_LENGTH])
+bool handshake_peer(peer *p, unsigned char info_hash[SHA_DIGEST_LENGTH])
 {
   bool ok = true;
 
-  handshake_msg *h = init_handshake_msg(peer_id, info_hash);
+  handshake_msg *h = init_handshake_msg(info_hash);
   int sockfd = perform_handshake(p, h);
   if (sockfd <= 0) {
     fprintf(stderr, "perform_handshake failed\n");
