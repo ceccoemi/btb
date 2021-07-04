@@ -13,22 +13,29 @@ LIBS := -lcrypto -lcurl -lpthread
 
 all: test $(TARGET)
 
-$(TARGET): tokenizer.o $(SRC_DIR)/main.c
+$(TARGET): $(SRC_DIR)/main.c
 	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
 
 test: build
 	@ ./$(TARGET_TEST)
 
-build: tokenizer.o tokenizer_test.o file_buf.o file_buf_test.o torrent_file.o torrent_file_test.o peer.o peer_test.o tracker_response.o handshake.o message.o bitfield.o bitfield_test.o pieces_pool.o pieces_pool_test.o client.o client_test.o piece_progress.o big_endian.o big_endian_test.o $(TEST_DIR)/main.c
+build: \
+	tokenizer.o tokenizer_test.o \
+	file_buf.o file_buf_test.o \
+	torrent_file.o torrent_file_test.o \
+	peer.o peer_test.o \
+	tracker_response.o \
+	handshake_msg.o \
+	message.o \
+	bitfield.o bitfield_test.o \
+	pieces_pool.o pieces_pool_test.o \
+	piece_progress.o \
+	big_endian.o big_endian_test.o \
+	$(TEST_DIR)/main.c
+
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
 
 piece_progress.o: $(SRC_DIR)/piece_progress.c
-	@ $(CC) $(CFLAGS) -c $?
-
-client_test.o: $(TEST_DIR)/client_test.c
-	@ $(CC) $(CFLAGS) -c $?
-
-client.o: $(SRC_DIR)/client.c
 	@ $(CC) $(CFLAGS) -c $?
 
 pieces_pool_test.o: $(TEST_DIR)/pieces_pool_test.c
@@ -46,7 +53,7 @@ bitfield.o: $(SRC_DIR)/bitfield.c
 message.o: $(SRC_DIR)/message.c
 	@ $(CC) $(CFLAGS) -c $?
 
-handshake.o: $(SRC_DIR)/handshake.c
+handshake_msg.o: $(SRC_DIR)/handshake_msg.c
 	@ $(CC) $(CFLAGS) -c $?
 
 tracker_response.o: $(SRC_DIR)/tracker_response.c

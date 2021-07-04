@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
 
-#include "handshake.h"
+#include "handshake_msg.h"
 
 #include <errno.h>
 #include <netdb.h>

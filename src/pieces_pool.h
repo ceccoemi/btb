@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 #include "bitfield.h"
 
 typedef struct pieces_pool
