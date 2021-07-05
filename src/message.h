@@ -24,16 +24,9 @@ typedef struct message
 {
   uint8_t id;
   size_t payload_len;
-  unsigned char* payload;
+  char* payload;
 } message;
 
-// Read a message from a socket
-message* read_message(int);
-
-message* create_message(uint8_t msg_id, size_t payload_len, unsigned char* payload);
-
-// Send a message on a socket.
-// It returns true if it succeeds.
-bool send_message(int, message*);
+message* init_message(uint8_t msg_id, size_t payload_len, char* payload);
 
 void free_message(message*);
