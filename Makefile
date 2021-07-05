@@ -20,12 +20,13 @@ test: build
 	@ ./$(TARGET_TEST)
 
 build: \
+	hash.o \
 	tokenizer.o tokenizer_test.o \
 	file_buf.o file_buf_test.o \
 	torrent_file.o torrent_file_test.o \
 	peer.o peer_test.o \
 	tracker_response.o \
-	handshake_msg.o \
+	handshake_msg.o handshake_msg_test.o \
 	message.o \
 	bitfield.o bitfield_test.o \
 	pieces_pool.o pieces_pool_test.o \
@@ -51,6 +52,9 @@ bitfield.o: $(SRC_DIR)/bitfield.c
 	@ $(CC) $(CFLAGS) -c $?
 
 message.o: $(SRC_DIR)/message.c
+	@ $(CC) $(CFLAGS) -c $?
+
+handshake_msg_test.o: $(TEST_DIR)/handshake_msg_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 handshake_msg.o: $(SRC_DIR)/handshake_msg.c
@@ -87,6 +91,9 @@ tokenizer_test.o: $(TEST_DIR)/tokenizer_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 tokenizer.o: $(SRC_DIR)/tokenizer.c
+	@ $(CC) $(CFLAGS) -c $?
+
+hash.o: $(SRC_DIR)/hash.c
 	@ $(CC) $(CFLAGS) -c $?
 
 clean:

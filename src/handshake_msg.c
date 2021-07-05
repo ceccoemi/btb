@@ -1,29 +1,22 @@
-#define _POSIX_C_SOURCE 200112L
-
 #include "handshake_msg.h"
 
-#include <errno.h>
-#include <netdb.h>
-#include <openssl/sha.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
-#include "peer.h"
-#include "peer_id.h"
-
-handshake_msg *init_handshake_msg(const unsigned char info_hash[SHA_DIGEST_LENGTH])
+handshake_msg *init_handshake_msg(unsigned char info_hash[BT_HASH_LENGTH],
+                                  char peer_id[PEER_ID_LENGTH])
 {
-  handshake_msg *h = malloc(sizeof(handshake_msg));
-  return h;
+  handshake_msg *hm = malloc(sizeof(handshake_msg));
+  hm->pstrlen = 19l;
+  hm->pstr = malloc(hm->pstrlen + 1);
+  // hm->pstr = "BitTorrent protocol";
+  strcpy(hm->pstr, "BitTorrent protocol");
+  return hm;
 }
 
-void free_handshake_msg(handshake_msg *h)
+void free_handshake_msg(handshake_msg *hm)
 {
-  if (h == NULL) return;
-  free(h);
+  if (hm == NULL) return;
+  free(hm->pstr);
+  free(hm);
 }
-

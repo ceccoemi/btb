@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "big_endian_test.h"
+#include "handshake_msg_test.h"
 #include "bitfield_test.h"
 #include "file_buf_test.h"
 #include "peer_test.h"
@@ -38,6 +39,9 @@ int main(void)
   test_lu_to_big_endian_1_bytes();
   fprintf(stdout, "\ttest_big_endian_to_lu\n");
   test_big_endian_to_lu();
+
+  fprintf(stdout, "\ttest_handshake_msg\n");
+  test_handshake_msg();
 
   fprintf(stdout, "\ttest_sample_torrent\n");
   test_sample_torrent();

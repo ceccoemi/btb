@@ -1,13 +1,11 @@
 #include "../src/torrent_file.h"
 
-#include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../src/hash.h"
 #include "torrent_file_test.h"
-
-#pragma GCC diagnostic ignored "-Wpointer-sign"
 
 void test_sample_torrent()
 {
@@ -20,7 +18,7 @@ void test_sample_torrent()
   if (t->num_pieces != want_num_pieces) {
     fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
   }
-  char want_piece_hashes[3][SHA_DIGEST_LENGTH] = {
+  unsigned char want_piece_hashes[3][BT_HASH_LENGTH] = {
       {'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
        'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'},
       {'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b',
@@ -28,17 +26,17 @@ void test_sample_torrent()
       {'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
        'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'}};
   for (long long i = 0; i < want_num_pieces; i++) {
-    if (memcmp(t->piece_hashes[i], want_piece_hashes[i], SHA_DIGEST_LENGTH) != 0) {
+    if (memcmp(t->piece_hashes[i], want_piece_hashes[i], BT_HASH_LENGTH) != 0) {
       fprintf(stderr, "wrong %lld-th piece hash\n", i);
     }
   }
-  const char *info_dict =
+  char *info_dict =
       "d6:lengthi20e4:name10:sample.txt12:piece "
       "lengthi65536e6:pieces60:aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbcccccccccccccccccccc7:"
       "privatei1ee";
-  unsigned char *want_hash_info = malloc(SHA_DIGEST_LENGTH);
-  SHA1(info_dict, strlen(info_dict), want_hash_info);
-  if (memcmp(t->info_hash, want_hash_info, SHA_DIGEST_LENGTH) != 0) {
+  unsigned char *want_hash_info = malloc(BT_HASH_LENGTH);
+  perform_hash((unsigned char *)info_dict, strlen(info_dict), want_hash_info);
+  if (memcmp(t->info_hash, want_hash_info, BT_HASH_LENGTH) != 0) {
     fprintf(stderr, "wrong info_hash\n");
   }
   free(want_hash_info);
@@ -79,7 +77,7 @@ void test_debian_torrent()
             want_piece_length);
     goto exit;
   }
-  long long want_num_pieces = 26960 / SHA_DIGEST_LENGTH;
+  long long want_num_pieces = 26960 / BT_HASH_LENGTH;
   if (t->num_pieces != want_num_pieces) {
     fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
     goto exit;

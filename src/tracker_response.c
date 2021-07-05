@@ -1,11 +1,11 @@
 #include "tracker_response.h"
 
 #include <curl/curl.h>
-#include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "hash.h"
 #include "peer.h"
 #include "peer_id.h"
 #include "tokenizer.h"
@@ -58,7 +58,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   sprintf(left_param, "&left=%lld", tf->length);
   strcat(get_request, left_param);
   strcat(get_request, "&info_hash=");
-  char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, SHA_DIGEST_LENGTH);
+  char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, BT_HASH_LENGTH);
   strcat(get_request, encoded_info_hash);
   curl_free(encoded_info_hash);
 
