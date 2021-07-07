@@ -1,9 +1,9 @@
 #include <stdio.h>
 
 #include "big_endian_test.h"
-#include "handshake_msg_test.h"
 #include "bitfield_test.h"
 #include "file_buf_test.h"
+#include "handshake_msg_test.h"
 #include "peer_test.h"
 #include "pieces_pool_test.h"
 #include "tokenizer_test.h"
@@ -42,6 +42,8 @@ int main(void)
 
   fprintf(stdout, "\ttest_handshake_msg\n");
   test_handshake_msg();
+  fprintf(stdout, "\ttest_encoding_decoding_handshake_msg\n");
+  test_encoding_decoding_handshake_msg();
 
   fprintf(stdout, "\ttest_sample_torrent\n");
   test_sample_torrent();
