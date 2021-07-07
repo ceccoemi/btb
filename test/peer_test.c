@@ -8,7 +8,10 @@
 
 void test_peer()
 {
-  char peer_repr[PEER_BLOB_SIZE] = {124, 0, 100, 105, 1, 1};
+  char peer_repr[PEER_BLOB_SIZE] = {
+      124, 0, 100, 105,  // address
+      1,   1,            // port
+  };
   peer *p = init_peer(peer_repr);
   char wantAddr[] = "124.0.100.105";
   char *gotAddr = malloc(strlen(wantAddr) + 1);

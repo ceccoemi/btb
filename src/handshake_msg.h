@@ -23,6 +23,7 @@ void free_handshake_msg(handshake_msg *);
 
 // Encode the handshake message in the buffer buf.
 // It returns the number of bytes written in the buffer.
+// The input buffer must be big enough to hold the data: a size of 128 should be enough.
 // It returns < 0 if it fails.
 int encode_handshake_msg(handshake_msg *, char *buf);
 

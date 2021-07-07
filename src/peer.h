@@ -15,6 +15,9 @@ typedef struct
   char address[PEER_ADDR_SIZE];
 } peer;
 
+// Create a peer from the input buffer.
+// The buffer should be of the format {<peer address>, <peer port>},
+// as it represented in the tracker response.
 peer *init_peer(char peer_repr[PEER_BLOB_SIZE]);
 
 void free_peer(peer *p);
