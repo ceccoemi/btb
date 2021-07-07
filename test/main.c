@@ -4,6 +4,7 @@
 #include "bitfield_test.h"
 #include "file_buf_test.h"
 #include "handshake_msg_test.h"
+#include "message_test.h"
 #include "peer_test.h"
 #include "pieces_pool_test.h"
 #include "tokenizer_test.h"
@@ -52,6 +53,9 @@ int main(void)
 
   fprintf(stdout, "\ttest_peer\n");
   test_peer();
+
+  fprintf(stdout, "\ttest_message\n");
+  test_message();
 
   fprintf(stdout, "\ttest_bitfield\n");
   test_bitfield();

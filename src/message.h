@@ -4,21 +4,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+// Number of bytes to represent the message length.
 #define MSG_LEN_BYTES 4
+// Number of bytes to represent the message ID.
 #define MSG_ID_BYTES 1
 
-#define MSG_CHOKE 0
-#define MSG_UNCHOKE 1
-#define MSG_INTERESTED 2
-#define MSG_NOTINTERESTED 3
-#define MSG_HAVE 4
-#define MSG_BITFIELD 5
-#define MSG_REQUEST 6
-#define MSG_PIECE 7
-#define MSG_CANCEL 8
-
-#define MESSAGE_RECEIVE_TIMEOUT_MSEC 10000
-#define MESSAGE_SEND_TIMEOUT_MSEC 10000
+#define MSG_ID_CHOKE 0
+#define MSG_ID_UNCHOKE 1
+#define MSG_ID_INTERESTED 2
+#define MSG_ID_NOTINTERESTED 3
+#define MSG_ID_HAVE 4
+#define MSG_ID_BITFIELD 5
+#define MSG_ID_REQUEST 6
+#define MSG_ID_PIECE 7
+#define MSG_ID_CANCEL 8
 
 typedef struct message
 {
@@ -27,6 +26,6 @@ typedef struct message
   char* payload;
 } message;
 
-message* init_message(uint8_t msg_id, size_t payload_len, char* payload);
+message* init_message(uint8_t msg_id, size_t payload_len, const char* payload);
 
 void free_message(message*);

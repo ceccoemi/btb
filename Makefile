@@ -27,7 +27,7 @@ build: \
 	peer.o peer_test.o \
 	tracker_response.o \
 	handshake_msg.o handshake_msg_test.o \
-	message.o \
+	message.o message_test.o \
 	bitfield.o bitfield_test.o \
 	pieces_pool.o pieces_pool_test.o \
 	piece_progress.o \
@@ -49,6 +49,9 @@ bitfield_test.o: $(TEST_DIR)/bitfield_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 bitfield.o: $(SRC_DIR)/bitfield.c
+	@ $(CC) $(CFLAGS) -c $?
+
+message_test.o: $(TEST_DIR)/message_test.c
 	@ $(CC) $(CFLAGS) -c $?
 
 message.o: $(SRC_DIR)/message.c

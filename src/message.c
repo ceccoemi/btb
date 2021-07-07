@@ -12,7 +12,7 @@
 
 #include "big_endian.h"
 
-message* init_message(uint8_t msg_id, size_t payload_len, char* payload)
+message* init_message(uint8_t msg_id, size_t payload_len, const char* payload)
 {
   message* msg = malloc(sizeof(message));
   msg->id = msg_id;
