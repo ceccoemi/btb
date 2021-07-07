@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-handshake_msg *init_handshake_msg(unsigned char info_hash[BT_HASH_LENGTH],
-                                  char peer_id[PEER_ID_LENGTH])
+handshake_msg *init_handshake_msg(const unsigned char info_hash[BT_HASH_LENGTH],
+                                  const char peer_id[PEER_ID_LENGTH])
 {
   handshake_msg *hm = malloc(sizeof(handshake_msg));
   hm->pstrlen = 19l;

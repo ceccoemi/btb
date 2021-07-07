@@ -10,8 +10,7 @@
 void test_handshake_msg()
 {
   unsigned char info_hash[BT_HASH_LENGTH] = "1234567890abcdefgjkh";
-  char my_peer_id[PEER_ID_LENGTH] = "MY-PEER-ID0123456789";
-  handshake_msg* hm = init_handshake_msg(info_hash, my_peer_id);
+  handshake_msg* hm = init_handshake_msg(info_hash, MY_PEER_ID);
   if (hm == NULL) {
     fprintf(stderr, "got NULL handshake_msg\n");
     goto exit;
@@ -31,9 +30,9 @@ void test_handshake_msg()
     fprintf(stderr, "wrong info_hash: got %*.s, want %*.s\n", BT_HASH_LENGTH, hm->info_hash,
             BT_HASH_LENGTH, info_hash);
   }
-  if (memcmp(my_peer_id, hm->peer_id, PEER_ID_LENGTH) != 0) {
+  if (memcmp(MY_PEER_ID, hm->peer_id, PEER_ID_LENGTH) != 0) {
     fprintf(stderr, "wrong peer_id: got %*.s, want %*.s\n", PEER_ID_LENGTH, hm->peer_id,
-            PEER_ID_LENGTH, my_peer_id);
+            PEER_ID_LENGTH, MY_PEER_ID);
   }
 
 exit:
@@ -43,8 +42,7 @@ exit:
 void test_encoding_decoding_handshake_msg()
 {
   unsigned char info_hash[BT_HASH_LENGTH] = "1234567890abcdefgjkh";
-  char my_peer_id[PEER_ID_LENGTH] = "MY-PEER-ID0123456789";
-  handshake_msg* hm = init_handshake_msg(info_hash, my_peer_id);
+  handshake_msg* hm = init_handshake_msg(info_hash, MY_PEER_ID);
   if (hm == NULL) {
     fprintf(stderr, "got NULL handshake_msg\n");
     goto exit;
