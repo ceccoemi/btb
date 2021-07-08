@@ -40,6 +40,8 @@ int main(void)
   test_lu_to_big_endian_1_bytes();
   fprintf(stdout, "\ttest_big_endian_to_lu\n");
   test_big_endian_to_lu();
+  fprintf(stdout, "\ttest_big_endian_to_lu_with_cast\n");
+  test_big_endian_to_lu_with_cast();
 
   fprintf(stdout, "\ttest_handshake_msg\n");
   test_handshake_msg();
@@ -56,6 +58,8 @@ int main(void)
 
   fprintf(stdout, "\ttest_message\n");
   test_message();
+  fprintf(stdout, "\ttest_message_encode_decode\n");
+  test_message_encode_decode();
 
   fprintf(stdout, "\ttest_bitfield\n");
   test_bitfield();

@@ -48,27 +48,18 @@ void test_encoding_decoding_handshake_msg()
     goto exit;
   }
 
-  char buf[128];
-  int bytes_written = encode_handshake_msg(hm, buf);
-  if (bytes_written < 0) {
-    fprintf(stderr, "encode_handshake_msg failed\n");
-    goto exit;
-  }
-  int want_bytes_written =
-      1 + hm->pstrlen + HANDSHAKE_RESERVED_LEN + BT_HASH_LENGTH + PEER_ID_LENGTH;
-  if (bytes_written != want_bytes_written) {
-    fprintf(stderr, "wrong encoded bytes: got %d, want %d", bytes_written, want_bytes_written);
-  }
-
-  handshake_msg* decoded_hm = decode_handshake_msg(buf, bytes_written);
+  handshake_msg_encoded* encoded = encode_handshake_msg(hm);
+  handshake_msg* decoded_hm = decode_handshake_msg(encoded->buf, encoded->size);
   if (decoded_hm == NULL) {
     fprintf(stderr, "decode_handshake_msg failed\n");
+    free_handshake_msg_encoded(encoded);
     goto exit;
   }
   if (memcmp(decoded_hm->info_hash, hm->info_hash, BT_HASH_LENGTH) != 0) {
     fprintf(stderr, "wrong decoded info_hash: got %*.s, want %*.s", BT_HASH_LENGTH,
             decoded_hm->info_hash, BT_HASH_LENGTH, hm->info_hash);
   }
+  free_handshake_msg_encoded(encoded);
   free_handshake_msg(decoded_hm);
 
 exit:

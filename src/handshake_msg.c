@@ -24,9 +24,12 @@ void free_handshake_msg(handshake_msg *hm)
   free(hm);
 }
 
-int encode_handshake_msg(handshake_msg *hm, char *buf)
+handshake_msg_encoded *encode_handshake_msg(handshake_msg *hm)
 {
-  char *last = buf;
+  handshake_msg_encoded *encoded = malloc(sizeof(handshake_msg_encoded));
+  encoded->size = 1 + hm->pstrlen + HANDSHAKE_RESERVED_LEN + BT_HASH_LENGTH + PEER_ID_LENGTH;
+  encoded->buf = malloc(encoded->size);
+  char *last = encoded->buf;
   last[0] = hm->pstrlen;
   last++;
   memcpy(last, hm->pstr, hm->pstrlen);
@@ -37,7 +40,14 @@ int encode_handshake_msg(handshake_msg *hm, char *buf)
   last += BT_HASH_LENGTH;
   memcpy(last, hm->peer_id, PEER_ID_LENGTH);
   last += PEER_ID_LENGTH;
-  return last - buf;
+  return encoded;
+}
+
+void free_handshake_msg_encoded(handshake_msg_encoded *encoded)
+{
+  if (encoded == NULL) return;
+  free(encoded->buf);
+  free(encoded);
 }
 
 handshake_msg *decode_handshake_msg(char *buf, size_t buf_length)

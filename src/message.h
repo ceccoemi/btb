@@ -23,9 +23,23 @@ typedef struct message
 {
   uint8_t id;
   size_t payload_len;
-  char* payload;
+  char *payload;
 } message;
 
-message* init_message(uint8_t msg_id, size_t payload_len, const char* payload);
+message *init_message(uint8_t msg_id, size_t payload_len, const char *payload);
 
-void free_message(message*);
+void free_message(message *);
+
+typedef struct message_encoded
+{
+  size_t size;
+  char *buf;
+} message_encoded;
+
+message_encoded *encode_message(message *);
+
+void free_message_encoded(message_encoded *);
+
+// Decode a message from buf.
+// It returns NULL if it fails.
+message *decode_message(char *buf, size_t buf_length);

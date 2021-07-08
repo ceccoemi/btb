@@ -21,11 +21,15 @@ handshake_msg *init_handshake_msg(const unsigned char info_hash[BT_HASH_LENGTH],
 
 void free_handshake_msg(handshake_msg *);
 
-// Encode the handshake message in the buffer buf.
-// It returns the number of bytes written in the buffer.
-// The input buffer must be big enough to hold the data: a size of 128 should be enough.
-// It returns < 0 if it fails.
-int encode_handshake_msg(handshake_msg *, char *buf);
+typedef struct handshake_msg_encoded
+{
+  size_t size;
+  char *buf;
+} handshake_msg_encoded;
+
+handshake_msg_encoded *encode_handshake_msg(handshake_msg *);
+
+void free_handshake_msg_encoded(handshake_msg_encoded *);
 
 // Decode a handshake_msg from buf.
 // It returns NULL if it fails.
