@@ -32,9 +32,16 @@ build: \
 	pieces_pool.o pieces_pool_test.o \
 	piece_progress.o \
 	big_endian.o big_endian_test.o \
+	conn.o conn_test.o \
 	$(TEST_DIR)/main.c
 
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
+
+conn_test.o: $(TEST_DIR)/conn_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+conn.o: $(SRC_DIR)/conn.c
+	@ $(CC) $(CFLAGS) -c $?
 
 piece_progress.o: $(SRC_DIR)/piece_progress.c
 	@ $(CC) $(CFLAGS) -c $?
