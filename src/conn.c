@@ -37,8 +37,9 @@ conn* init_conn(char* addr, uint16_t port)
   }
   fprintf(stdout, "established a connection with %s:%s\n", addr, port_repr);
   conn* c = malloc(sizeof(conn));
-  c->addr = malloc(strlen(addr));
+  c->addr = malloc(strlen(addr) + 1);
   strcpy(c->addr, addr);
+  c->port = port;
   c->_sockfd = sockfd;
   return c;
 }
