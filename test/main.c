@@ -74,6 +74,8 @@ int main(void)
   test_init_conn_fail();
   fprintf(stdout, "\ttest_send_data\n");
   test_send_data();
+  fprintf(stdout, "\ttest_receive_data_with_timeout\n");
+  test_receive_data_with_timeout();
 
   fprintf(stdout, "done\n");
 }

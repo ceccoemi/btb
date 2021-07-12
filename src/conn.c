@@ -1,15 +1,20 @@
 // Define this to use addrinfo
 #define _POSIX_C_SOURCE 200112L
 
+// Define this to use pthread_timedjoin_np
+#define _GNU_SOURCE
+
 #include "conn.h"
 
 #include <errno.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 
 conn* init_conn(char* addr, uint16_t port)
 {
@@ -51,23 +56,103 @@ void free_conn(conn* c)
   free(c);
 }
 
-bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
+struct thread_data
 {
-  fprintf(stdout, "sending data to %s:%hu\n", c->addr, c->port);
-  int bytes_sent = send(c->_sockfd, buf, buf_size, 0);
+  conn* c;
+  char* buf;
+  size_t buf_size;
+  bool ok;
+};
+
+void* send_thread_fun(void* data)
+{
+  struct thread_data* d = (struct thread_data*)data;
+  fprintf(stdout, "sending data to %s:%hu\n", d->c->addr, d->c->port);
+  int bytes_sent = send(d->c->_sockfd, d->buf, d->buf_size, 0);
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
-    return false;
+    d->ok = false;
+    return NULL;
   }
   if (bytes_sent == 0) {
     fprintf(stderr, "connection lost\n");
-    return false;
+    d->ok = false;
+    return NULL;
   }
-  if (bytes_sent != (int)buf_size) {
-    fprintf(stderr, "didn't sent all data: sent %d, want %ld\n", bytes_sent, buf_size);
-    return false;
+  if (bytes_sent != (int)d->buf_size) {
+    fprintf(stderr, "didn't sent all data: sent %d, want %ld\n", bytes_sent, d->buf_size);
+    d->ok = false;
+    return NULL;
   }
-  return true;
+  fprintf(stdout, "sent %d bytes to %s%hu\n", bytes_sent, d->c->addr, d->c->port);
+  d->ok = true;
+  return NULL;
 }
 
-bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec) { return false; }
+bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
+{
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+    fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
+    return false;
+  }
+  ts.tv_sec += timeout_sec;
+
+  struct thread_data thread_data = {c, buf, buf_size};
+  pthread_t thread_id;
+
+  pthread_create(&thread_id, NULL, send_thread_fun, &thread_data);
+
+  int err = pthread_timedjoin_np(thread_id, NULL, &ts);
+  if (err != 0) {
+    fprintf(stdout, "timeout expired, aborting\n");
+    pthread_cancel(thread_id);
+    pthread_join(thread_id, NULL);
+    return false;
+  }
+  return thread_data.ok;
+}
+
+void* recv_thread_fun(void* data)
+{
+  struct thread_data* d = (struct thread_data*)data;
+  fprintf(stdout, "receiving data from %s:%hu\n", d->c->addr, d->c->port);
+  int bytes_received = recv(d->c->_sockfd, d->buf, d->buf_size, 0);
+  if (bytes_received < 0) {
+    fprintf(stderr, "recv failed: %s\n", strerror(errno));
+    d->ok = false;
+    return NULL;
+  }
+  if (bytes_received == 0) {
+    fprintf(stderr, "connection lost\n");
+    d->ok = false;
+    return NULL;
+  }
+  fprintf(stdout, "received %d bytes to %s%hu\n", bytes_received, d->c->addr, d->c->port);
+  d->ok = true;
+  return NULL;
+}
+
+bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
+{
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+    fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
+    return false;
+  }
+  ts.tv_sec += timeout_sec;
+
+  struct thread_data thread_data = {c, buf, buf_size};
+  pthread_t thread_id;
+
+  pthread_create(&thread_id, NULL, recv_thread_fun, &thread_data);
+
+  int err = pthread_timedjoin_np(thread_id, NULL, &ts);
+  if (err != 0) {
+    fprintf(stdout, "timeout expired, aborting\n");
+    pthread_cancel(thread_id);
+    pthread_join(thread_id, NULL);
+    return false;
+  }
+  return thread_data.ok;
+}

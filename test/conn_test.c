@@ -41,3 +41,22 @@ void test_send_data()
 exit:
   free_conn(c);
 }
+
+void test_receive_data_with_timeout()
+{
+  conn* c = init_conn("www.example.com", 80);
+  if (c == NULL) {
+    fprintf(stderr, "init_conn failed\n");
+    goto exit;
+  }
+  char buf[128];
+  int timeout_sec = 1;
+  bool ok = receive_data(c, buf, 128, timeout_sec);
+  if (ok) {
+    fprintf(stderr, "receive_data should fail because timeout\n");
+    goto exit;
+  }
+
+exit:
+  free_conn(c);
+}
