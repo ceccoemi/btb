@@ -1,3 +1,3 @@
 #pragma once
 
-void test_init_peer(void);
+void test_peer(void);

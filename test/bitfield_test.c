@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "../src/bitfield.h"
-#include "../src/handshake.h"
 #include "../src/message.h"
 #include "../src/torrent_file.h"
 #include "../src/tracker_response.h"

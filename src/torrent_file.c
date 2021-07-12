@@ -1,12 +1,12 @@
 #include "torrent_file.h"
 
-#include <openssl/sha.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "file_buf.h"
+#include "hash.h"
 #include "tokenizer.h"
 
 #pragma GCC diagnostic ignored "-Wpointer-sign"
@@ -125,8 +125,8 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
         exit_code = TORRENT_ERROR;
         break;
       }
-      tr->info_hash = malloc(SHA_DIGEST_LENGTH);
-      SHA1(info_start, info_end - info_start + 1, tr->info_hash);
+      tr->info_hash = malloc(BT_HASH_LENGTH);
+      perform_hash(info_start, info_end - info_start + 1, tr->info_hash);
     } else if (tk->token_size == strlen("name") &&
                memcmp(tk->token, "name", strlen("name")) == 0) {
       /* --- parse name --- */
@@ -223,11 +223,11 @@ int parse_torrent_file(torrent_file *tr, const char *fname)
         exit_code = TORRENT_ERROR;
         break;
       }
-      tr->num_pieces = tk->token_size / SHA_DIGEST_LENGTH;
+      tr->num_pieces = tk->token_size / BT_HASH_LENGTH;
       tr->piece_hashes = malloc(tr->num_pieces * sizeof(char *));
       for (long long i = 0; i < tr->num_pieces; i++) {
-        tr->piece_hashes[i] = malloc(SHA_DIGEST_LENGTH);
-        memcpy(tr->piece_hashes[i], tk->token + SHA_DIGEST_LENGTH * i, SHA_DIGEST_LENGTH);
+        tr->piece_hashes[i] = malloc(BT_HASH_LENGTH);
+        memcpy(tr->piece_hashes[i], tk->token + BT_HASH_LENGTH * i, BT_HASH_LENGTH);
       }
       /* ------------------------ */
     }

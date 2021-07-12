@@ -26,7 +26,7 @@ typedef struct torrent_file
 torrent_file *init_torrent_file(void);
 
 // Parse a .torrent file, fill the struct and return an error code.
-int parse_torrent_file(torrent_file *, const char *);
+int parse_torrent_file(torrent_file *tf, const char *filename);
 
 // Free the memory of a torrent_file
 void free_torrent_file(torrent_file *);

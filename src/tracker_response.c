@@ -1,11 +1,11 @@
 #include "tracker_response.h"
 
 #include <curl/curl.h>
-#include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "hash.h"
 #include "peer.h"
 #include "peer_id.h"
 #include "tokenizer.h"
@@ -58,7 +58,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   sprintf(left_param, "&left=%lld", tf->length);
   strcat(get_request, left_param);
   strcat(get_request, "&info_hash=");
-  char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, SHA_DIGEST_LENGTH);
+  char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, BT_HASH_LENGTH);
   strcat(get_request, encoded_info_hash);
   curl_free(encoded_info_hash);
 
@@ -112,7 +112,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   r->num_peers = tk->token_size / PEER_BLOB_SIZE;
   r->peers = malloc(r->num_peers * sizeof(peer *));
   for (long i = 0; i < r->num_peers; i++) {
-    unsigned char *peer_repr = malloc(PEER_BLOB_SIZE);
+    char *peer_repr = malloc(PEER_BLOB_SIZE);
     memcpy(peer_repr, tk->token + (PEER_BLOB_SIZE * i), 6);
     r->peers[i] = init_peer(peer_repr);
     free(peer_repr);
