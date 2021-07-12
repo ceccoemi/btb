@@ -2,6 +2,7 @@
 
 #include "big_endian_test.h"
 #include "bitfield_test.h"
+#include "client_test.h"
 #include "conn_test.h"
 #include "file_buf_test.h"
 #include "handshake_msg_test.h"
@@ -76,6 +77,9 @@ int main(void)
   test_send_data();
   fprintf(stdout, "\ttest_receive_data_with_timeout\n");
   test_receive_data_with_timeout();
+
+  fprintf(stdout, "\ttest_client\n");
+  test_client();
 
   fprintf(stdout, "done\n");
 }

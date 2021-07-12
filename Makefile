@@ -33,9 +33,16 @@ build: \
 	piece_progress.o \
 	big_endian.o big_endian_test.o \
 	conn.o conn_test.o \
+	client.o client_test.o \
 	$(TEST_DIR)/main.c
 
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
+
+client_test.o: $(TEST_DIR)/client_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+client.o: $(SRC_DIR)/client.c
+	@ $(CC) $(CFLAGS) -c $?
 
 conn_test.o: $(TEST_DIR)/conn_test.c
 	@ $(CC) $(CFLAGS) -c $?
