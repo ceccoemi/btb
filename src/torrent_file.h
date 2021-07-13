@@ -1,7 +1,6 @@
 #pragma once
 
-#define TORRENT_OK 0
-#define TORRENT_ERROR 1
+#include <stdbool.h>
 
 typedef struct torrent_file
 {
@@ -25,8 +24,9 @@ typedef struct torrent_file
 // Allocate the memory for a torrent_file
 torrent_file *init_torrent_file(void);
 
-// Parse a .torrent file, fill the struct and return an error code.
-int parse_torrent_file(torrent_file *tf, const char *filename);
+// Parse a .torrent file and fill the struct.
+// It returns true if it succeeds.
+bool parse_torrent_file(torrent_file *tf, const char *filename);
 
 // Free the memory of a torrent_file
 void free_torrent_file(torrent_file *);

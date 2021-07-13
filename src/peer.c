@@ -6,11 +6,11 @@
 
 #include "big_endian.h"
 
-peer *init_peer(char peer_repr[PEER_BLOB_SIZE])
+peer *init_peer(unsigned char peer_repr[PEER_BLOB_SIZE])
 {
   peer *p = malloc(sizeof(peer));
   memcpy(p->address, peer_repr, PEER_ADDR_SIZE);
-  p->port = big_endian_to_lu((unsigned char*) peer_repr + PEER_ADDR_SIZE, PEER_PORT_SIZE);
+  p->port = big_endian_to_lu((unsigned char *)peer_repr + PEER_ADDR_SIZE, PEER_PORT_SIZE);
   return p;
 }
 

@@ -10,9 +10,9 @@
 void test_sample_torrent()
 {
   torrent_file *t = init_torrent_file();
-  int err = parse_torrent_file(t, "test/data/sample.torrent");
-  if (err != TORRENT_OK) {
-    fprintf(stderr, "parsing failed: got error code %d\n", err);
+  bool ok = parse_torrent_file(t, "test/data/sample.torrent");
+  if (!ok) {
+    fprintf(stderr, "parsing failed, expected success\n");
   }
   long long want_num_pieces = 3;
   if (t->num_pieces != want_num_pieces) {
@@ -46,9 +46,9 @@ void test_sample_torrent()
 void test_debian_torrent()
 {
   torrent_file *t = init_torrent_file();
-  int err = parse_torrent_file(t, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
-  if (err != TORRENT_OK) {
-    fprintf(stderr, "parsing failed: got error code %d\n", err);
+  bool ok = parse_torrent_file(t, "test/data/debian-10.9.0-amd64-netinst.iso.torrent");
+  if (!ok) {
+    fprintf(stderr, "parsing failed, expected success\n");
     goto exit;
   }
   char want_announce[] = "http://bttracker.debian.org:6969/announce";

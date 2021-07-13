@@ -2,4 +2,4 @@
 
 #include <stdbool.h>
 
-bool download_torrent(char *filename);
+bool download_torrent(const char *filename);

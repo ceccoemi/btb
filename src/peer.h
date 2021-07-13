@@ -12,12 +12,12 @@
 typedef struct
 {
   uint16_t port;
-  char address[PEER_ADDR_SIZE];
+  unsigned char address[PEER_ADDR_SIZE];
 } peer;
 
 // Create a peer from the input buffer.
 // The buffer should be of the format {<peer address>, <peer port>},
 // as it represented in the tracker response.
-peer *init_peer(char peer_repr[PEER_BLOB_SIZE]);
+peer *init_peer(unsigned char peer_repr[PEER_BLOB_SIZE]);
 
 void free_peer(peer *p);

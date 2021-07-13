@@ -8,7 +8,7 @@
 
 void test_peer()
 {
-  char peer_repr[PEER_BLOB_SIZE] = {
+  unsigned char peer_repr[PEER_BLOB_SIZE] = {
       124, 0, 100, 105,  // address
       1,   1,            // port
   };

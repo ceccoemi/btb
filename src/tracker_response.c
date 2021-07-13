@@ -112,7 +112,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   r->num_peers = tk->token_size / PEER_BLOB_SIZE;
   r->peers = malloc(r->num_peers * sizeof(peer *));
   for (long i = 0; i < r->num_peers; i++) {
-    char *peer_repr = malloc(PEER_BLOB_SIZE);
+    unsigned char *peer_repr = malloc(PEER_BLOB_SIZE);
     memcpy(peer_repr, tk->token + (PEER_BLOB_SIZE * i), 6);
     r->peers[i] = init_peer(peer_repr);
     free(peer_repr);
