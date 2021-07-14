@@ -7,7 +7,7 @@ CC := gcc
 WARNINGS := -Wall -Werror
 CSTD := c17
 CFLAGS := -g -std=$(CSTD) $(WARNINGS)
-LIBS := -lcrypto -lcurl -lpthread
+LIBS := -lcrypto -lcurl -lpthread -lm
 
 .PHONY: clean test
 

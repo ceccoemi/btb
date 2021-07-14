@@ -55,7 +55,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   strcat(get_request, "&downloaded=0");
   strcat(get_request, "&compact=1");
   char left_param[64];
-  sprintf(left_param, "&left=%lld", tf->length);
+  sprintf(left_param, "&left=%lu", tf->length);
   strcat(get_request, left_param);
   strcat(get_request, "&info_hash=");
   char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, BT_HASH_LENGTH);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef struct torrent_file
 {
@@ -10,13 +11,13 @@ typedef struct torrent_file
   // SHA-1 hash of the info section
   unsigned char *info_hash;
   // Size of each piece
-  long long piece_length;
+  size_t piece_length;
   // Number of pieces
-  long long num_pieces;
+  size_t num_pieces;
   // SHA-1 hashes of the pieces
   char **piece_hashes;
   // Size of the entire file to download
-  long long length;
+  size_t length;
   // Name of the file to download
   char *name;  // null-terminated string
 } torrent_file;

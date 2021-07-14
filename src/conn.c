@@ -104,6 +104,7 @@ void* send_thread_fun(void* data)
   struct thread_data* d = (struct thread_data*)data;
   fprintf(stdout, "sending data to %s:%hu\n", d->c->addr, d->c->port);
   int bytes_sent = send(d->c->_sockfd, d->buf, d->buf_size, 0);
+  fprintf(stdout, "OOOOO\n");
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
     d->ok = false;
@@ -119,7 +120,7 @@ void* send_thread_fun(void* data)
     d->ok = false;
     return NULL;
   }
-  fprintf(stdout, "sent %d bytes to %s%hu\n", bytes_sent, d->c->addr, d->c->port);
+  fprintf(stdout, "sent %d bytes to %s:%hu\n", bytes_sent, d->c->addr, d->c->port);
   d->ok = true;
   return NULL;
 }
@@ -151,7 +152,7 @@ bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 void* recv_thread_fun(void* data)
 {
   struct thread_data* d = (struct thread_data*)data;
-  fprintf(stdout, "receiving data from %s:%hu\n", d->c->addr, d->c->port);
+  fprintf(stdout, "receiving %lu bytes from %s:%hu\n", d->buf_size, d->c->addr, d->c->port);
   int bytes_received = recv(d->c->_sockfd, d->buf, d->buf_size, 0);
   if (bytes_received < 0) {
     fprintf(stderr, "recv failed: %s\n", strerror(errno));

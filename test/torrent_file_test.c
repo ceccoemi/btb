@@ -14,9 +14,9 @@ void test_sample_torrent()
   if (!ok) {
     fprintf(stderr, "parsing failed, expected success\n");
   }
-  long long want_num_pieces = 3;
+  size_t want_num_pieces = 3;
   if (t->num_pieces != want_num_pieces) {
-    fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
+    fprintf(stderr, "wrong num_pieces: got %lu, want %lu\n", t->num_pieces, want_num_pieces);
   }
   unsigned char want_piece_hashes[3][BT_HASH_LENGTH] = {
       {'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a',
@@ -25,9 +25,9 @@ void test_sample_torrent()
        'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b'},
       {'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
        'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c'}};
-  for (long long i = 0; i < want_num_pieces; i++) {
+  for (size_t i = 0; i < want_num_pieces; i++) {
     if (memcmp(t->piece_hashes[i], want_piece_hashes[i], BT_HASH_LENGTH) != 0) {
-      fprintf(stderr, "wrong %lld-th piece hash\n", i);
+      fprintf(stderr, "wrong %lu-th piece hash\n", i);
     }
   }
   char *info_dict =
@@ -66,29 +66,28 @@ void test_debian_torrent()
     fprintf(stderr, "wrong name: got %s, want %s\n", t->name, want_name);
     goto exit;
   }
-  long long want_length = 353370112;
+  size_t want_length = 353370112;
   if (t->length != want_length) {
-    fprintf(stderr, "wrong length: got %lld, want %lld\n", t->length, want_length);
+    fprintf(stderr, "wrong length: got %lu, want %lu\n", t->length, want_length);
     goto exit;
   }
-  long long want_piece_length = 262144;
+  size_t want_piece_length = 262144;
   if (t->piece_length != want_piece_length) {
-    fprintf(stderr, "wrong piece_length: got %lld, want %lld\n", t->piece_length,
-            want_piece_length);
+    fprintf(stderr, "wrong piece_length: got %lu, want %lu\n", t->piece_length, want_piece_length);
     goto exit;
   }
-  long long want_num_pieces = 26960 / BT_HASH_LENGTH;
+  size_t want_num_pieces = 26960 / BT_HASH_LENGTH;
   if (t->num_pieces != want_num_pieces) {
-    fprintf(stderr, "wrong num_pieces: got %lld, want %lld\n", t->num_pieces, want_num_pieces);
+    fprintf(stderr, "wrong num_pieces: got %lu, want %lu\n", t->num_pieces, want_num_pieces);
     goto exit;
   }
   if (t->piece_hashes == NULL) {
     fprintf(stderr, "piece_hashes is NULL\n");
     goto exit;
   }
-  for (long long i = 0; i < t->num_pieces; i++) {
+  for (size_t i = 0; i < t->num_pieces; i++) {
     if (t->piece_hashes[i] == NULL) {
-      fprintf(stderr, "%lld-th piece hash is NULL\n", i);
+      fprintf(stderr, "%lu-th piece hash is NULL\n", i);
       goto exit;
     }
   }
