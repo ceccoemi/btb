@@ -16,8 +16,9 @@ typedef struct conn
 // Establish a connection with the specified address at the input port.
 // addr must be a null-terminated string of the format "xxx.xxx.xxx.xxx" or a domain name.
 // It returns the conn struct with which it will be possible to send and receive data.
+// It aborts after timeout_sec seconds.
 // It returns NULL if it fails.
-conn* init_conn(char* addr, uint16_t port);
+conn* init_conn(char* addr, uint16_t port, int timeout_sec);
 
 void free_conn(conn* c);
 

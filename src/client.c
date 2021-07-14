@@ -39,7 +39,7 @@ bool download_torrent(const char *filename)
     char peer_addr[15 + 1];  // An address is of the form xxx.xxx.xxx.xxx + '\0'
     sprintf(peer_addr, "%d.%d.%d.%d", p->address[0], p->address[1], p->address[2], p->address[3]);
     // TODO: start a new thread here with timedjoin
-    conn *c = init_conn(peer_addr, p->port);
+    conn *c = init_conn(peer_addr, p->port, TIMEOUT_SEC);
     if (c == NULL) {
       fprintf(stderr, "init_conn failed\n");
       continue;

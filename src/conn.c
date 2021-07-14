@@ -16,7 +16,27 @@
 #include <sys/types.h>
 #include <time.h>
 
-conn* init_conn(char* addr, uint16_t port)
+struct connect_thread_data
+{
+  char* addr;
+  char* port_repr;
+  int sockfd;
+  struct addrinfo* res;
+};
+
+void* connect_thread_fun(void* data)
+{
+  struct connect_thread_data* d = (struct connect_thread_data*)data;
+  fprintf(stdout, "contacting %s:%s\n", d->addr, d->port_repr);
+  int err = connect(d->sockfd, d->res->ai_addr, d->res->ai_addrlen);
+  if (err != 0) {
+    fprintf(stdout, "connect failed: %s\n", strerror(errno));
+    return NULL;
+  }
+  return NULL;
+}
+
+conn* init_conn(char* addr, uint16_t port, int timeout_sec)
 {
   struct addrinfo hints;
   memset(&hints, 0, sizeof(hints));  // Make sure that the struct is empty
@@ -33,13 +53,28 @@ conn* init_conn(char* addr, uint16_t port)
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-  fprintf(stdout, "contacting %s:%s\n", addr, port_repr);
-  int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  freeaddrinfo(res);
-  if (err != 0) {
-    fprintf(stdout, "connect failed: %s\n", strerror(errno));
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+    fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
     return NULL;
   }
+  ts.tv_sec += timeout_sec;
+
+  struct connect_thread_data data = {addr, port_repr, sockfd, res};
+  pthread_t thread_id;
+
+  pthread_create(&thread_id, NULL, connect_thread_fun, &data);
+
+  int err = pthread_timedjoin_np(thread_id, NULL, &ts);
+  if (err != 0) {
+    fprintf(stdout, "timeout expired, aborting\n");
+    pthread_cancel(thread_id);
+    pthread_join(thread_id, NULL);
+    freeaddrinfo(res);
+    return NULL;
+  }
+  freeaddrinfo(res);
+
   fprintf(stdout, "established a connection with %s:%s\n", addr, port_repr);
   conn* c = malloc(sizeof(conn));
   c->addr = malloc(strlen(addr) + 1);
@@ -128,7 +163,7 @@ void* recv_thread_fun(void* data)
     d->ok = false;
     return NULL;
   }
-  fprintf(stdout, "received %d bytes to %s%hu\n", bytes_received, d->c->addr, d->c->port);
+  fprintf(stdout, "received %d bytes from %s:%hu\n", bytes_received, d->c->addr, d->c->port);
   d->ok = true;
   return NULL;
 }

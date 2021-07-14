@@ -8,7 +8,7 @@
 
 void test_init_conn()
 {
-  conn* c = init_conn("www.example.com", 80);
+  conn* c = init_conn("www.example.com", 80, 10);
   if (c == NULL) {
     fprintf(stderr, "init_conn failed\n");
   }
@@ -17,7 +17,7 @@ void test_init_conn()
 
 void test_init_conn_fail()
 {
-  conn* c = init_conn("unknown-address", 9999);
+  conn* c = init_conn("unknown-address", 9999, 10);
   if (c != NULL) {
     fprintf(stderr, "init_conn should fail\n");
     free_conn(c);
@@ -26,7 +26,7 @@ void test_init_conn_fail()
 
 void test_send_data()
 {
-  conn* c = init_conn("www.example.com", 80);
+  conn* c = init_conn("www.example.com", 80, 10);
   if (c == NULL) {
     fprintf(stderr, "init_conn failed\n");
     goto exit;
@@ -44,7 +44,7 @@ exit:
 
 void test_receive_data_with_timeout()
 {
-  conn* c = init_conn("www.example.com", 80);
+  conn* c = init_conn("www.example.com", 80, 10);
   if (c == NULL) {
     fprintf(stderr, "init_conn failed\n");
     goto exit;
