@@ -102,7 +102,7 @@ struct thread_data
 void* send_thread_fun(void* data)
 {
   struct thread_data* d = (struct thread_data*)data;
-  fprintf(stdout, "sending data to %s:%hu\n", d->c->addr, d->c->port);
+  fprintf(stdout, "sending %lu bytes to %s:%hu\n", d->buf_size, d->c->addr, d->c->port);
   int bytes_sent = send(d->c->_sockfd, d->buf, d->buf_size, 0);
   fprintf(stdout, "OOOOO\n");
   if (bytes_sent < 0) {

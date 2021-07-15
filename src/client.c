@@ -13,7 +13,7 @@
 #include "torrent_file.h"
 #include "tracker_response.h"
 
-#define TIMEOUT_SEC 10
+#define TIMEOUT_SEC 5
 
 bool download_torrent(const char *filename)
 {
@@ -49,79 +49,82 @@ bool download_torrent(const char *filename)
     }
 
     /***** HANDSHAKE *****/
+    bool handshake_ok = false;
     handshake_msg *hm = init_handshake_msg(tf->info_hash, MY_PEER_ID);
     handshake_msg_encoded *hm_encoded = encode_handshake_msg(hm);
     fprintf(stdout, "performing handshake with peer %s:%hu\n", peer_addr, p->port);
     ok = send_data(c, hm_encoded->buf, hm_encoded->size, TIMEOUT_SEC);
     if (!ok) {
       fprintf(stderr, "send_data failed\n\n");
-      free_handshake_msg_encoded(hm_encoded);
-      free_handshake_msg(hm);
-      free_conn(c);
-      continue;
+      goto exit_handshake_0;
     }
     char *hm_buf = malloc(hm_encoded->size);
     ok = receive_data(c, hm_buf, hm_encoded->size, TIMEOUT_SEC);
     if (!ok) {
       fprintf(stderr, "receive_data failed\n\n");
-      free(hm_buf);
-      free_handshake_msg_encoded(hm_encoded);
-      free_handshake_msg(hm);
-      free_conn(c);
-      continue;
+      goto exit_handshake_1;
     }
     fprintf(stdout, "performed handshake with peer %s:%hu\n", peer_addr, p->port);
     handshake_msg *hm_reply = decode_handshake_msg(hm_buf, hm_encoded->size);
-    free(hm_buf);
     if (hm_reply == NULL) {
       fprintf(stderr, "decode_handshake_msg failed\n\n");
-      free_handshake_msg_encoded(hm_encoded);
-      free_handshake_msg(hm);
-      free_conn(c);
-      continue;
+      goto exit_handshake_1;
     }
     if (memcmp(hm_reply->info_hash, hm->info_hash, BT_HASH_LENGTH) != 0) {
       fprintf(stderr, "info hashes don't match, aborting connection with peer\n\n");
-      free_handshake_msg(hm_reply);
-      free_handshake_msg_encoded(hm_encoded);
-      free_handshake_msg(hm);
+      goto exit_handshake_2;
+    }
+    handshake_ok = true;
+  exit_handshake_2:
+    free_handshake_msg(hm_reply);
+  exit_handshake_1:
+    free(hm_buf);
+  exit_handshake_0:
+    free_handshake_msg_encoded(hm_encoded);
+    free_handshake_msg(hm);
+    if (!handshake_ok) {
       free_conn(c);
       continue;
     }
-    free_handshake_msg(hm_reply);
-    free_handshake_msg_encoded(hm_encoded);
-    free_handshake_msg(hm);
     /**********************/
 
     // NOTE: the bitfield is optional, some peers could send "HAVE" messages.
     // For now, we assume that after the handshake, the bitfield message is sent.
     /***** BITFIELD ******/
+    bool bitfield_ok = false;
     size_t bitfield_msg_size = ceil(tf->num_pieces / 8.0) + MSG_ID_BYTES + MSG_LEN_BYTES;
     char *bitfield_buf = malloc(bitfield_msg_size);
     fprintf(stdout, "receving bitfield\n");
     ok = receive_data(c, bitfield_buf, bitfield_msg_size, TIMEOUT_SEC);
     if (!ok) {
       fprintf(stderr, "receive_data failed\n\n");
-      goto next_peer;
+      goto bitfield_exit_0;
     }
     message *bitfield_msg = decode_message(bitfield_buf, bitfield_msg_size);
     if (bitfield_msg == NULL) {
       fprintf(stderr, "decode_message failed\n\n");
-      goto next_peer;
+      goto bitfield_exit_1;
     }
     fprintf(stdout, "received bitifield\n");
     bitfield *bf =
         init_bitfield((unsigned char *)bitfield_msg->payload, bitfield_msg->payload_len);
+
+    bitfield_ok = true;
+  bitfield_exit_1:
     free_message(bitfield_msg);
+  bitfield_exit_0:
+    free(bitfield_buf);
+    if (!bitfield_ok) {
+      free_conn(c);
+      continue;
+    }
     /*********************/
 
     free_bitfield(bf);
-  next_peer:
     free_conn(c);
     break;
   }
 
-  // exit_2:
   free_pieces_pool(pp);
 exit_1:
   free_tracker_response(tr);

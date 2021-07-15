@@ -38,7 +38,7 @@ message_encoded* encode_message(message* msg)
   encoded->size = MSG_LEN_BYTES + MSG_ID_BYTES + msg->payload_len;
   encoded->buf = malloc(sizeof(encoded->size));
   char* last = encoded->buf;
-  bool ok = lu_to_big_endian(encoded->size, (unsigned char*)last, MSG_LEN_BYTES);
+  bool ok = lu_to_big_endian(encoded->size - MSG_LEN_BYTES, (unsigned char*)last, MSG_LEN_BYTES);
   if (!ok) {
     fprintf(stderr, "lu_to_big_endian failed\n");
     free_message_encoded(encoded);
@@ -61,9 +61,9 @@ void free_message_encoded(message_encoded* encoded)
 message* decode_message(char* buf, size_t buf_length)
 {
   unsigned long message_length = big_endian_to_lu((unsigned char*)buf, MSG_LEN_BYTES);
-  if (message_length != buf_length - MSG_LEN_BYTES) {
-    fprintf(stderr, "buffer size (%lu) doesn't match message length (%lu) + %d\n", buf_length,
-            message_length, MSG_LEN_BYTES);
+  if ((message_length + MSG_LEN_BYTES) != buf_length) {
+    fprintf(stderr, "buffer size (%lu) doesn't match message length + %d (%lu)\n", buf_length,
+            MSG_LEN_BYTES, message_length + MSG_LEN_BYTES);
     return NULL;
   }
   return init_message(buf[MSG_LEN_BYTES], message_length - MSG_ID_BYTES,

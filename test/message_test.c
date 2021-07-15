@@ -54,6 +54,8 @@ void test_message_encode_decode()
     fprintf(stderr, "encode_message returned NULL\n");
     goto exit_1;
   }
+  fprintf(stdout, "MSG LENGTH: %d %d %d %d\n", encoded->buf[0], encoded->buf[1], encoded->buf[2],
+          encoded->buf[3]);
   if (encoded->size < 1) {
     fprintf(stderr, "message_encoded should have at least size 1\n");
     goto exit_1;
