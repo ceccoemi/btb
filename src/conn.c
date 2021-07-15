@@ -22,6 +22,7 @@ struct connect_thread_data
   char* port_repr;
   int sockfd;
   struct addrinfo* res;
+  bool ok;
 };
 
 void* connect_thread_fun(void* data)
@@ -31,8 +32,10 @@ void* connect_thread_fun(void* data)
   int err = connect(d->sockfd, d->res->ai_addr, d->res->ai_addrlen);
   if (err != 0) {
     fprintf(stdout, "connect failed: %s\n", strerror(errno));
+    d->ok = false;
     return NULL;
   }
+  d->ok = true;
   return NULL;
 }
 
@@ -60,10 +63,10 @@ conn* init_conn(char* addr, uint16_t port, int timeout_sec)
   }
   ts.tv_sec += timeout_sec;
 
-  struct connect_thread_data data = {addr, port_repr, sockfd, res};
+  struct connect_thread_data thread_data = {addr, port_repr, sockfd, res};
   pthread_t thread_id;
 
-  pthread_create(&thread_id, NULL, connect_thread_fun, &data);
+  pthread_create(&thread_id, NULL, connect_thread_fun, &thread_data);
 
   int err = pthread_timedjoin_np(thread_id, NULL, &ts);
   if (err != 0) {
@@ -74,6 +77,10 @@ conn* init_conn(char* addr, uint16_t port, int timeout_sec)
     return NULL;
   }
   freeaddrinfo(res);
+  if (!thread_data.ok) {
+    fprintf(stderr, "can't connect with %s:%s\n", addr, port_repr);
+    return NULL;
+  }
 
   fprintf(stdout, "established a connection with %s:%s\n", addr, port_repr);
   conn* c = malloc(sizeof(conn));
@@ -104,7 +111,6 @@ void* send_thread_fun(void* data)
   struct thread_data* d = (struct thread_data*)data;
   fprintf(stdout, "sending %lu bytes to %s:%hu\n", d->buf_size, d->c->addr, d->c->port);
   int bytes_sent = send(d->c->_sockfd, d->buf, d->buf_size, 0);
-  fprintf(stdout, "OOOOO\n");
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
     d->ok = false;

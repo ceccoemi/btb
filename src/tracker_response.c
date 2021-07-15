@@ -72,7 +72,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   curl_global_cleanup();
   if (out_code != CURLE_OK) {
     free(response);
-    fprintf(stderr, "error in performing the request, curl error code: %d\n", out_code);
+    fprintf(stderr, "error in performing the request: %s\n", curl_easy_strerror(out_code));
     return false;
   }
 
