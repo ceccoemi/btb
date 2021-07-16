@@ -64,24 +64,26 @@ int main(void)
     fprintf(stdout, "\ttest_message_encode_decode\n");
     test_message_encode_decode();
 
-    fprintf(stdout, "\ttest_bitfield\n");
-    test_bitfield();
+*/
+  fprintf(stdout, "\ttest_bitfield\n");
+  test_bitfield();
 
-    fprintf(stdout, "\ttest_pieces_pool\n");
-    test_pieces_pool();
+  fprintf(stdout, "\ttest_pieces_pool\n");
+  test_pieces_pool();
 
-    fprintf(stdout, "\ttest_init_conn\n");
-    test_init_conn();
-    fprintf(stdout, "\ttest_init_conn_fail\n");
-    test_init_conn_fail();
-    fprintf(stdout, "\ttest_send_data\n");
-    test_send_data();
-    fprintf(stdout, "\ttest_receive_data_with_timeout\n");
-    test_receive_data_with_timeout();
-    */
+  fprintf(stdout, "\ttest_init_conn\n");
+  test_init_conn();
+  fprintf(stdout, "\ttest_init_conn_fail\n");
+  test_init_conn_fail();
+  fprintf(stdout, "\ttest_send_data\n");
+  test_send_data();
+  fprintf(stdout, "\ttest_receive_data_with_timeout\n");
+  test_receive_data_with_timeout();
 
+  /*
   fprintf(stdout, "\ttest_client\n");
   test_client();
+    */
 
   fprintf(stdout, "done\n");
 }

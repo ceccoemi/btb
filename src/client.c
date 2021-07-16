@@ -40,6 +40,7 @@ bool download_torrent(const char *filename)
   size_t piece_index = get_piece_index(pp);
   for (size_t i = 0; i < tr->num_peers; i++) {
     fprintf(stdout, "\n");
+    bool downloaded_piece_ok = false;
     peer *p = tr->peers[i];
     char peer_addr[15 + 1];  // An address is of the form xxx.xxx.xxx.xxx + '\0'
     sprintf(peer_addr, "%d.%d.%d.%d", p->address[0], p->address[1], p->address[2], p->address[3]);
@@ -84,8 +85,7 @@ bool download_torrent(const char *filename)
     free_handshake_msg_encoded(hm_encoded);
     free_handshake_msg(hm);
     if (!handshake_ok) {
-      free_conn(c);
-      continue;
+      goto exit_for_0;
     }
     /**********************/
 
@@ -116,8 +116,7 @@ bool download_torrent(const char *filename)
   bitfield_exit_0:
     free(bitfield_buf);
     if (!bitfield_ok) {
-      free_conn(c);
-      continue;
+      goto exit_for_1;
     }
     /*********************/
 
@@ -129,9 +128,34 @@ bool download_torrent(const char *filename)
     }
     fprintf(stdout, "peer %s:%hu has piece #%lu\n", peer_addr, p->port, piece_index);
 
+    /**** INTERESTED *****/
+    bool interested_ok = false;
+    message *interested_msg = init_message(MSG_ID_INTERESTED, 0, NULL);
+    message_encoded *interested_msg_encoded = encode_message(interested_msg);
+    ok = send_data(c, interested_msg_encoded->buf, interested_msg_encoded->size, TIMEOUT_SEC);
+    if (!ok) {
+      fprintf(stderr, "send_data failed\n");
+      goto exit_interested;
+    }
+    interested_ok = true;
+  exit_interested:
+    free_message_encoded(interested_msg_encoded);
+    free_message(interested_msg);
+    if (!interested_ok) {
+      goto exit_for_1;
+    }
+    /*********************/
+
+    downloaded_piece_ok = true;
+  exit_for_1:
     free_bitfield(bf);
+  exit_for_0:
     free_conn(c);
-    break;
+    if (downloaded_piece_ok) {
+      break;
+    } else {
+      continue;
+    }
   }
 
   free_pieces_pool(pp);
