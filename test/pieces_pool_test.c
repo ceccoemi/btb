@@ -8,34 +8,34 @@
 void test_pieces_pool()
 {
   size_t num_pieces = 10;
-  pieces_pool *q = init_pieces_pool(num_pieces);
-  DEFER({ free_pieces_pool(q); });
-  if (is_done(q)) {
+  pieces_pool *pp = init_pieces_pool(num_pieces);
+  DEFER({ free_pieces_pool(pp); });
+  if (is_done(pp)) {
     fprintf(stderr, "is_done should return false\n");
   }
-  size_t idx = get_piece_index(q);
+  size_t idx = get_piece_index(pp);
   if (idx >= num_pieces) {
     fprintf(stderr, "wrong index: got %li, want x < %li\n", idx, num_pieces);
   }
   // Extract all pieces
   for (size_t i = 0; i < num_pieces - 1; i++) {
-    idx = get_piece_index(q);
+    idx = get_piece_index(pp);
     if (idx >= num_pieces || idx == 0) {
       fprintf(stderr, "wrong index: got %li, want 0 < x < %li\n", idx, num_pieces);
     }
   }
-  if (!is_done(q)) {
+  if (!is_done(pp)) {
     fprintf(stderr, "is_done should return true\n");
   }
-  idx = get_piece_index(q);
+  idx = get_piece_index(pp);
   if (idx < num_pieces) {
     fprintf(stderr, "get_piece_index should return >= num_pieces\n");
   }
-  mark_as_undone(q, 0);
-  if (is_done(q)) {
+  mark_as_undone(pp, 0);
+  if (is_done(pp)) {
     fprintf(stderr, "is_done should return false\n");
   }
-  idx = get_piece_index(q);
+  idx = get_piece_index(pp);
   if (idx != 0) {
     fprintf(stderr, "wrong index: got %li, want 0\n", idx);
   }
