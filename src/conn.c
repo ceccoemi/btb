@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include "defer.h"
+
 struct connect_thread_data
 {
   char* addr;
@@ -53,6 +55,7 @@ conn* init_conn(char* addr, uint16_t port, int timeout_sec)
     fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(out));
     return NULL;
   }
+  DEFER({ freeaddrinfo(res); });
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
@@ -73,10 +76,8 @@ conn* init_conn(char* addr, uint16_t port, int timeout_sec)
     fprintf(stdout, "timeout expired, aborting\n");
     pthread_cancel(thread_id);
     pthread_join(thread_id, NULL);
-    freeaddrinfo(res);
     return NULL;
   }
-  freeaddrinfo(res);
   if (!thread_data.ok) {
     fprintf(stderr, "can't connect with %s:%s\n", addr, port_repr);
     return NULL;
@@ -133,6 +134,10 @@ void* send_thread_fun(void* data)
 
 bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 {
+  if (c == NULL) {
+    fprintf(stderr, "connection not initialized\n");
+    return false;
+  }
   struct timespec ts;
   if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
     fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
@@ -177,6 +182,10 @@ void* recv_thread_fun(void* data)
 
 bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 {
+  if (c == NULL) {
+    fprintf(stderr, "connection not initialized\n");
+    return false;
+  }
   struct timespec ts;
   if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
     fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));

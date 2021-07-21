@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defer.h"
+
 file_buf *read_file(const char *fname)
 {
   FILE *f = fopen(fname, "rb");
@@ -11,6 +13,7 @@ file_buf *read_file(const char *fname)
     fprintf(stderr, "Error in opening the file %s\n", fname);
     return NULL;
   }
+  DEFER({ fclose(f); });
   fseek(f, 0, SEEK_END);
   long length = ftell(f);
   fseek(f, 0, SEEK_SET);
@@ -20,11 +23,9 @@ file_buf *read_file(const char *fname)
   long r = fread(buf->data, 1, length, f);
   if (r != length) {
     fprintf(stderr, "Error: read %ld of %ld bytes from file %s\n", r, length, fname);
-    fclose(f);
     free_file_buf(buf);
     return NULL;
   }
-  fclose(f);
   return buf;
 }
 

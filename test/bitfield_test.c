@@ -71,6 +71,4 @@ void test_bitfield()
   if (!has_piece(b, 12)) {
     fprintf(stderr, "should have %d-th piece\n", 12);
   }
-
-  // free_bitfield(b);
 }

@@ -31,11 +31,13 @@ void test_send_data()
   DEFER({ free_conn(c); });
   if (c == NULL) {
     fprintf(stderr, "init_conn failed\n");
+    return;
   }
   char buf[128] = "some data to send";
   bool ok = send_data(c, buf, strlen(buf), 10);
   if (!ok) {
     fprintf(stderr, "send_data failed\n");
+    return;
   }
 }
 
@@ -45,11 +47,13 @@ void test_receive_data_with_timeout()
   DEFER({ free_conn(c); });
   if (c == NULL) {
     fprintf(stderr, "init_conn failed\n");
+    return;
   }
   char buf[128];
   int timeout_sec = 1;
   bool ok = receive_data(c, buf, 128, timeout_sec);
   if (ok) {
     fprintf(stderr, "receive_data should fail because timeout\n");
+    return;
   }
 }

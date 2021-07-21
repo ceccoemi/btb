@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../src/defer.h"
 #include "../src/message.h"
 
 void test_message()
@@ -13,27 +14,21 @@ void test_message()
   want_payload[0] = 'a';
   want_payload[1] = 'b';
   message *msg = init_message(want_msg_id, want_payload_len, want_payload);
+  DEFER({ free_message(msg); });
   if (msg == NULL) {
     fprintf(stderr, "init_message returns NULL\n");
-    goto exit;
   }
   if (msg->id != want_msg_id) {
     fprintf(stderr, "wrong message ID: got %d, want %d\n", msg->id, want_msg_id);
-    goto exit;
   }
   if (msg->payload_len != want_payload_len) {
     fprintf(stderr, "wrong message payload_len: got %lu, want %lu\n", msg->payload_len,
             want_payload_len);
-    goto exit;
   }
   if (memcmp(msg->payload, want_payload, msg->payload_len) != 0) {
     fprintf(stderr, "wrong message payload: got %*.s, want %*.s\n", (int)msg->payload_len,
             msg->payload, (int)want_payload_len, want_payload);
-    goto exit;
   }
-
-exit:
-  free_message(msg);
 }
 
 void test_message_encode_decode()
@@ -44,37 +39,32 @@ void test_message_encode_decode()
   want_payload[0] = 'a';
   want_payload[1] = 'b';
   message *msg = init_message(want_msg_id, want_payload_len, want_payload);
+  DEFER({ free_message(msg); });
   if (msg == NULL) {
     fprintf(stderr, "init_message returned NULL\n");
-    goto exit_0;
   }
 
   message_encoded *encoded = encode_message(msg);
+  DEFER({ free_message_encoded(encoded); });
   if (encoded == NULL) {
     fprintf(stderr, "encode_message returned NULL\n");
-    goto exit_1;
+    return;
   }
   fprintf(stdout, "MSG LENGTH: %d %d %d %d\n", encoded->buf[0], encoded->buf[1], encoded->buf[2],
           encoded->buf[3]);
   if (encoded->size < 1) {
     fprintf(stderr, "message_encoded should have at least size 1\n");
-    goto exit_1;
+    return;
   }
   message *decoded = decode_message(encoded->buf, encoded->size);
+  DEFER({ free_message(decoded); });
   if (decoded == NULL) {
     fprintf(stderr, "decode_message returned NULL\n");
-    goto exit_2;
+    return;
   }
   if (memcmp(decoded->payload, want_payload, decoded->payload_len) != 0) {
     fprintf(stderr, "wrong payload in decoded message: got %*.s, want %*.s\n",
             (int)decoded->payload_len, decoded->payload, (int)want_payload_len, want_payload);
-    goto exit_2;
+    return;
   }
-
-exit_2:
-  free_message(decoded);
-exit_1:
-  free_message_encoded(encoded);
-exit_0:
-  free_message(msg);
 }

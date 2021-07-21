@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defer.h"
 #include "hash.h"
 #include "peer.h"
 #include "peer_id.h"
@@ -65,6 +66,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   // Perform the request
   curl_easy_setopt(curl, CURLOPT_URL, get_request);
   struct response_data *response = malloc(sizeof(struct response_data));
+  DEFER({ free(response); });
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_response);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
   CURLcode out_code = curl_easy_perform(curl);
@@ -75,11 +77,11 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
     fprintf(stderr, "error in performing the request: %s\n", curl_easy_strerror(out_code));
     return false;
   }
+  DEFER({ free(response->data); });
 
   // Parse the response into tracker_response
   tokenizer *tk = init_tokenizer(response->data, response->len);
-  free(response->data);
-  free(response);
+  DEFER({ free_tokenizer(tk); });
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
   err = next(tk);  // s
@@ -117,17 +119,14 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
     r->peers[i] = init_peer(peer_repr);
     free(peer_repr);
   }
-  free_tokenizer(tk);
   return true;
 
 tokenizer_error:
   fprintf(stderr, "tokenizer error: %d\n", err);
-  free_tokenizer(tk);
   return false;
 
 tracker_response_parsing_error:
   fprintf(stderr, "unexpected tracker response: %.*s\n", (int)tk->data_size, tk->data);
-  free_tokenizer(tk);
   return false;
 }
 
