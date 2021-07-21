@@ -65,22 +65,20 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
 
   // Perform the request
   curl_easy_setopt(curl, CURLOPT_URL, get_request);
-  struct response_data *response = malloc(sizeof(struct response_data));
-  DEFER({ free(response); });
+  struct response_data response;
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_response);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   curl_global_cleanup();
   if (out_code != CURLE_OK) {
-    free(response);
     fprintf(stderr, "error in performing the request: %s\n", curl_easy_strerror(out_code));
     return false;
   }
-  DEFER({ free(response->data); });
 
   // Parse the response into tracker_response
-  tokenizer *tk = init_tokenizer(response->data, response->len);
+  tokenizer *tk = init_tokenizer(response.data, response.len);
+  free(response.data);
   DEFER({ free_tokenizer(tk); });
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
