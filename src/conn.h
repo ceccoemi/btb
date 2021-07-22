@@ -29,5 +29,5 @@ bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec);
 
 // Receive buf_size bytes of data in buf from the specified connection.
 // It aborts after timeout_sec seconds.
-// It returns true if it succeeds.
-bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec);
+// It returns the number of received bytes: bytes received <= 0 means that it failed.
+int receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec);

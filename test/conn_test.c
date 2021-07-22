@@ -51,8 +51,8 @@ void test_receive_data_with_timeout()
   }
   char buf[128];
   int timeout_sec = 1;
-  bool ok = receive_data(c, buf, 128, timeout_sec);
-  if (ok) {
+  int bytes_received = receive_data(c, buf, 128, timeout_sec);
+  if (bytes_received > 0) {
     fprintf(stderr, "receive_data should fail because timeout\n");
     return;
   }

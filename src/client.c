@@ -66,8 +66,8 @@ bool download_torrent(const char *filename)
     }
     char *hm_buf = malloc(hm_encoded->size);
     DEFER({ free(hm_buf); });
-    ok = receive_data(c, hm_buf, hm_encoded->size, TIMEOUT_SEC);
-    if (!ok) {
+    int bytes_receive = receive_data(c, hm_buf, hm_encoded->size, TIMEOUT_SEC);
+    if (bytes_receive <= 0) {
       fprintf(stderr, "receive_data failed\n");
       continue;
     }
@@ -91,8 +91,8 @@ bool download_torrent(const char *filename)
     char *bitfield_buf = malloc(bitfield_msg_size);
     DEFER({ free(bitfield_buf); });
     fprintf(stdout, "receving bitfield from peer %s:%hu\n", peer_addr, p->port);
-    ok = receive_data(c, bitfield_buf, bitfield_msg_size, TIMEOUT_SEC);
-    if (!ok) {
+    int bytes_received = receive_data(c, bitfield_buf, bitfield_msg_size, TIMEOUT_SEC);
+    if (bytes_received <= 0) {
       fprintf(stderr, "receive_data failed\n");
       continue;
     }
@@ -125,6 +125,23 @@ bool download_torrent(const char *filename)
       continue;
     }
     fprintf(stdout, "sent \"Interested\" message to peer %s:%hu\n", peer_addr, p->port);
+    /*********************/
+
+    /******* State *******/
+    bool next_peer = false;
+    while (true) {
+      size_t recv_msg_buf_size = 1024;
+      char recv_msg_buf[recv_msg_buf_size];
+      int bytes_received = receive_data(c, recv_msg_buf, recv_msg_buf_size, TIMEOUT_SEC);
+      if (bytes_received <= 0) {
+        fprintf(stderr, "receive_data failed\n");
+        break;
+      }
+      break;
+    }
+    if (next_peer) {
+      continue;
+    }
     /*********************/
 
     break;
