@@ -91,12 +91,7 @@ bool download_torrent(const char *filename)
     char *bitfield_buf = malloc(bitfield_msg_size);
     DEFER({ free(bitfield_buf); });
     fprintf(stdout, "receving bitfield from peer %s:%hu\n", peer_addr, p->port);
-    int bytes_received = receive_data(c, bitfield_buf, bitfield_msg_size, TIMEOUT_SEC);
-    if (bytes_received <= 0) {
-      fprintf(stderr, "receive_data failed\n");
-      continue;
-    }
-    message *bitfield_msg = decode_message(bitfield_buf, bitfield_msg_size);
+    message *bitfield_msg = read_message_from_conn(c, TIMEOUT_SEC);
     if (bitfield_msg == NULL) {
       fprintf(stderr, "decode_message failed\n");
     }
@@ -137,7 +132,35 @@ bool download_torrent(const char *filename)
         fprintf(stderr, "receive_data failed\n");
         break;
       }
-      break;
+      message *recv_msg = decode_message(recv_msg_buf, bytes_received);
+      if (recv_msg == NULL) {
+        fprintf(stderr, "decode_message failed\n");
+        break;
+      }
+      DEFER({ free_message(recv_msg); });
+      switch (recv_msg->id) {
+        case MSG_ID_CHOKE:
+          fprintf(stdout, "received a \"Choke\" message\n");
+          break;
+        case MSG_ID_UNCHOKE:
+          fprintf(stdout, "received a \"Unchoke\" message\n");
+          break;
+        case MSG_ID_INTERESTED:
+          fprintf(stdout, "received a \"Interested\" message\n");
+          break;
+        case MSG_ID_REQUEST:
+          fprintf(stdout, "received a \"Request\" message\n");
+          break;
+        case MSG_ID_PIECE:
+          fprintf(stdout, "received a \"Piece\" message\n");
+          break;
+        case MSG_ID_CANCEL:
+          fprintf(stdout, "received a \"Cancel\" message\n");
+          break;
+        default:
+          fprintf(stdout, "Unknown or useless message ID: %hu\n", recv_msg->id);
+          break;
+      }
     }
     if (next_peer) {
       continue;
