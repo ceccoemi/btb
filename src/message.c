@@ -38,7 +38,7 @@ message_encoded* encode_message(message* msg)
 {
   message_encoded* encoded = malloc(sizeof(message_encoded));
   encoded->size = MSG_LEN_BYTES + MSG_ID_BYTES + msg->payload_len;
-  encoded->buf = malloc(sizeof(encoded->size));
+  encoded->buf = malloc(encoded->size);
   char* last = encoded->buf;
   bool ok = lu_to_big_endian(encoded->size - MSG_LEN_BYTES, (unsigned char*)last, MSG_LEN_BYTES);
   if (!ok) {
@@ -71,6 +71,21 @@ message* decode_message(char* buf, size_t buf_length)
   return init_message(buf[MSG_LEN_BYTES], message_length - MSG_ID_BYTES,
                       buf + MSG_LEN_BYTES + MSG_ID_BYTES);
 }
+bool send_message_to_conn(message* msg, conn* c, int timeout_sec)
+{
+  message_encoded* msg_encoded = encode_message(msg);
+  if (msg_encoded == NULL) {
+    fprintf(stderr, "encode_message failed\n");
+    return false;
+  }
+  DEFER({ free_message_encoded(msg_encoded); });
+  bool ok = send_data(c, msg_encoded->buf, msg_encoded->size, timeout_sec);
+  if (!ok) {
+    fprintf(stderr, "send_data failed\n");
+    return false;
+  }
+  return true;
+}
 
 message* read_message_from_conn(conn* c, int timeout_sec)
 {
@@ -93,15 +108,17 @@ message* read_message_from_conn(conn* c, int timeout_sec)
   char* payload_buf = malloc(payload_len);
   DEFER({ free(payload_buf); });
   if (payload_len > 0) {
-    int bytes_received = receive_data(c, payload_buf, payload_len, timeout_sec);
-    if (bytes_received <= 0) {
-      fprintf(stderr, "receive_data failed\n");
-      return NULL;
-    }
-    if (bytes_received != payload_len) {
-      fprintf(stderr, "receive_data failed: expected %lu bytes, got %d bytes instead\n",
-              payload_len, bytes_received);
-      return NULL;
+    fprintf(stdout, "reading message payload\n");
+    int bytes_received = 0;
+    while (bytes_received < payload_len) {
+      int received =
+          receive_data(c, payload_buf + bytes_received, payload_len - bytes_received, timeout_sec);
+      if (received <= 0) {
+        fprintf(stderr, "receive_data failed\n");
+        return NULL;
+      }
+      fprintf(stdout, "received %d bytes of message payload\n", received);
+      bytes_received += received;
     }
   }
   return init_message(msg_id, payload_len, payload_buf);

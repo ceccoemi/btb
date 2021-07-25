@@ -4,12 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "big_endian.h"
 #include "conn.h"
 #include "defer.h"
 #include "handshake_msg.h"
 #include "message.h"
 #include "peer.h"
 #include "peer_id.h"
+#include "piece_progress.h"
 #include "pieces_pool.h"
 #include "torrent_file.h"
 #include "tracker_response.h"
@@ -111,10 +113,8 @@ bool download_torrent(const char *filename)
     /**** INTERESTED *****/
     message *interested_msg = init_message(MSG_ID_INTERESTED, 0, NULL);
     DEFER({ free_message(interested_msg); });
-    message_encoded *interested_msg_encoded = encode_message(interested_msg);
-    DEFER({ free_message_encoded(interested_msg_encoded); });
     fprintf(stdout, "sending \"Interested\" message to peer %s:%hu\n", peer_addr, p->port);
-    ok = send_data(c, interested_msg_encoded->buf, interested_msg_encoded->size, TIMEOUT_SEC);
+    ok = send_message_to_conn(interested_msg, c, TIMEOUT_SEC);
     if (!ok) {
       fprintf(stderr, "send_data failed\n");
       continue;
@@ -123,45 +123,78 @@ bool download_torrent(const char *filename)
     /*********************/
 
     /******* State *******/
+    piece_progress *p_prog = init_piece_progress(piece_index, tf->piece_length);
+    DEFER({ free_piece_progress(p_prog); });
     bool next_peer = false;
-    while (true) {
-      size_t recv_msg_buf_size = 1024;
-      char recv_msg_buf[recv_msg_buf_size];
-      int bytes_received = receive_data(c, recv_msg_buf, recv_msg_buf_size, TIMEOUT_SEC);
-      if (bytes_received <= 0) {
-        fprintf(stderr, "receive_data failed\n");
-        break;
-      }
-      message *recv_msg = decode_message(recv_msg_buf, bytes_received);
-      if (recv_msg == NULL) {
-        fprintf(stderr, "decode_message failed\n");
-        break;
-      }
-      DEFER({ free_message(recv_msg); });
-      switch (recv_msg->id) {
-        case MSG_ID_CHOKE:
-          fprintf(stdout, "received a \"Choke\" message\n");
-          break;
-        case MSG_ID_UNCHOKE:
-          fprintf(stdout, "received a \"Unchoke\" message\n");
-          break;
-        case MSG_ID_INTERESTED:
-          fprintf(stdout, "received a \"Interested\" message\n");
-          break;
-        case MSG_ID_REQUEST:
-          fprintf(stdout, "received a \"Request\" message\n");
-          break;
-        case MSG_ID_PIECE:
-          fprintf(stdout, "received a \"Piece\" message\n");
-          break;
-        case MSG_ID_CANCEL:
-          fprintf(stdout, "received a \"Cancel\" message\n");
-          break;
-        default:
-          fprintf(stdout, "Unknown or useless message ID: %hu\n", recv_msg->id);
-          break;
-      }
+    // while (true) {
+    message *recv_msg = read_message_from_conn(c, TIMEOUT_SEC);
+    if (recv_msg == NULL) {
+      fprintf(stderr, "read_message_from_conn failed\n");
+      break;
     }
+    DEFER({ free_message(recv_msg); });
+    switch (recv_msg->id) {
+      case MSG_ID_CHOKE:
+        fprintf(stdout, "received a \"Choke\" message\n");
+        break;
+      case MSG_ID_UNCHOKE:
+        fprintf(stdout, "received a \"Unchoke\" message\n");
+        unsigned char
+            request_msg_payload[PIECE_INDEX_BYTES + BLOCK_OFFSET_BYTES + BLOCK_LENGTH_BYTES];
+        ok = lu_to_big_endian(piece_index, request_msg_payload, PIECE_INDEX_BYTES);
+        if (!ok) {
+          fprintf(stderr, "lu_to_big_endian failed\n");
+          goto next_peer;
+        }
+        // Block size of 2^14 = 16384 (TODO move to constant)
+        size_t block_size = 16384;
+        size_t block_offset = p_prog->downloaded * block_size;
+        ok = lu_to_big_endian(block_offset, request_msg_payload + PIECE_INDEX_BYTES,
+                              BLOCK_OFFSET_BYTES);
+        if (!ok) {
+          fprintf(stderr, "lu_to_big_endian failed\n");
+          goto next_peer;
+        }
+        ok = lu_to_big_endian(block_size,
+                              request_msg_payload + PIECE_INDEX_BYTES + BLOCK_OFFSET_BYTES,
+                              BLOCK_LENGTH_BYTES);
+        if (!ok) {
+          fprintf(stderr, "lu_to_big_endian failed\n");
+          goto next_peer;
+        }
+
+        message *msg_request = init_message(
+            MSG_ID_REQUEST, PIECE_INDEX_BYTES + BLOCK_OFFSET_BYTES + BLOCK_LENGTH_BYTES,
+            (char *)request_msg_payload);
+        DEFER({ free_message(msg_request); });
+        fprintf(stdout, "sending \"Request\" message for a block with offset %lu of piece #%lu\n",
+                block_offset, piece_index);
+        ok = send_message_to_conn(msg_request, c, TIMEOUT_SEC);
+        if (!ok) {
+          fprintf(stderr, "send_message_to_conn failed\n");
+          goto next_peer;
+        }
+        fprintf(stdout, "\"Request\" message sent\n");
+
+        break;
+      case MSG_ID_INTERESTED:
+        fprintf(stdout, "received a \"Interested\" message\n");
+        break;
+      case MSG_ID_REQUEST:
+        fprintf(stdout, "received a \"Request\" message\n");
+        break;
+      case MSG_ID_PIECE:
+        fprintf(stdout, "received a \"Piece\" message\n");
+        break;
+      case MSG_ID_CANCEL:
+        fprintf(stdout, "received a \"Cancel\" message\n");
+        break;
+      default:
+        fprintf(stdout, "Unknown or useless message ID: %hu\n", recv_msg->id);
+        break;
+    }
+    //}
+  next_peer:
     if (next_peer) {
       continue;
     }

@@ -34,10 +34,13 @@ void test_message()
 void test_message_encode_decode()
 {
   uint8_t want_msg_id = MSG_ID_CHOKE;
-  size_t want_payload_len = 2;
+
+  size_t want_payload_len = 9;
   char want_payload[want_payload_len];
-  want_payload[0] = 'a';
-  want_payload[1] = 'b';
+  for (size_t i = 0; i < want_payload_len; i++) {
+    want_payload[i] = 'x';
+  }
+
   message *msg = init_message(want_msg_id, want_payload_len, want_payload);
   DEFER({ free_message(msg); });
   if (msg == NULL) {
