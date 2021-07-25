@@ -8,7 +8,6 @@ piece_progress* init_piece_progress(size_t piece_index, size_t piece_size)
   p->index = piece_index;
   p->size = piece_size;
   p->buf = malloc(piece_size);
-  p->requested = 0;
   p->downloaded = 0;
   return p;
 }

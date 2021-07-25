@@ -59,12 +59,10 @@ int main(void)
     fprintf(stdout, "\ttest_peer\n");
     test_peer();
 
-*/
   fprintf(stdout, "\ttest_message\n");
   test_message();
   fprintf(stdout, "\ttest_message_encode_decode\n");
   test_message_encode_decode();
-  /*
 
       fprintf(stdout, "\ttest_bitfield\n");
       test_bitfield();
@@ -82,8 +80,8 @@ int main(void)
     test_receive_data_with_timeout();
       */
 
-  // fprintf(stdout, "\ttest_client\n");
-  // test_client();
+  fprintf(stdout, "\ttest_client\n");
+  test_client();
 
   fprintf(stdout, "done\n");
 }
