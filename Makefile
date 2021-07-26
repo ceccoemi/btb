@@ -11,15 +11,28 @@ LIBS := -lcrypto -lcurl -lpthread -lm
 
 .PHONY: clean test
 
-all: test $(TARGET)
-
-$(TARGET): $(SRC_DIR)/main.c
-	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
-
-test: build
-	@ ./$(TARGET_TEST)
+all: test build
 
 build: \
+	hash.o \
+	tokenizer.o \
+	file_buf.o \
+	torrent_file.o \
+	peer.o \
+	tracker_response.o \
+	handshake_msg.o \
+	message.o \
+	bitfield.o \
+	pieces_pool.o \
+	piece_progress.o \
+	big_endian.o \
+	conn.o \
+	client.o \
+	$(SRC_DIR)/main.c
+
+	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
+
+test: \
 	hash.o \
 	tokenizer.o tokenizer_test.o \
 	file_buf.o file_buf_test.o \
@@ -37,6 +50,7 @@ build: \
 	$(TEST_DIR)/main.c
 
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
+	@ ./$(TARGET_TEST)
 
 client_test.o: $(TEST_DIR)/client_test.c
 	@ $(CC) $(CFLAGS) -c $?

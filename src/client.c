@@ -18,8 +18,7 @@
 
 #define TIMEOUT_SEC 5
 
-static bool download_piece(size_t piece_index, size_t piece_size, conn *c,
-                           const char *output_fname)
+static bool download_piece(size_t piece_index, size_t piece_size, conn *c, torrent_file *tf)
 {
   piece_progress *p_prog = init_piece_progress(piece_index, piece_size);
   DEFER({ free_piece_progress(p_prog); });
@@ -97,9 +96,9 @@ static bool download_piece(size_t piece_index, size_t piece_size, conn *c,
     fprintf(stdout, "\n");
     /*********************/
   }
-  FILE *f = fopen(output_fname, "a");
+  FILE *f = fopen(tf->name, "a");
   if (f == NULL) {
-    fprintf(stderr, "failed to open the file %s\n", output_fname);
+    fprintf(stderr, "failed to open the file %s\n", tf->name);
     return false;
   }
   DEFER({ fclose(f); });
@@ -109,15 +108,12 @@ static bool download_piece(size_t piece_index, size_t piece_size, conn *c,
             p_prog->size);
     return false;
   }
-  fprintf(stdout, "written %d bytes in %s\n", bytes_written, output_fname);
+  fprintf(stdout, "written %d bytes in %s\n", bytes_written, tf->name);
   return true;
 }
 
-bool download_torrent(const char *torrent_fname, const char *output_fname)
+bool download_torrent(const char *torrent_fname)
 {
-  // Remove the output file if it exists.
-  remove(output_fname);
-
   torrent_file *tf = init_torrent_file();
   DEFER({ free_torrent_file(tf); });
   bool ok = parse_torrent_file(tf, torrent_fname);
@@ -125,6 +121,8 @@ bool download_torrent(const char *torrent_fname, const char *output_fname)
     fprintf(stderr, "parse_torrent_file failed\n");
     return false;
   }
+  // Remove the output file if it exists.
+  remove(tf->name);
   fprintf(stdout,
           "the file is %lu bytes total and it is divided in %lu pieces of %lu bytes each\n",
           tf->length, tf->num_pieces, tf->piece_length);
@@ -140,9 +138,7 @@ bool download_torrent(const char *torrent_fname, const char *output_fname)
 
   pieces_pool *pp = init_pieces_pool(tf->num_pieces);
   DEFER({ free_pieces_pool(pp); });
-  size_t piece_index;
-  // For now, we assume that a piece will be downloaded from a pass on all the peers.
-  while ((piece_index = get_piece_index(pp)) < pp->num_pieces) {
+  while (!is_done(pp)) {
     for (size_t i = 0; i < tr->num_peers; i++) {
       fprintf(stdout, "\n");
       peer *p = tr->peers[i];
@@ -210,12 +206,6 @@ bool download_torrent(const char *torrent_fname, const char *output_fname)
       DEFER({ free_bitfield(peer_bf); });
       /*********************/
 
-      if (!has_piece(peer_bf, piece_index)) {
-        fprintf(stdout, "peer %s:%hu doesn't have piece #%lu\n", peer_addr, p->port, piece_index);
-        continue;
-      }
-      fprintf(stdout, "peer %s:%hu has piece #%lu\n", peer_addr, p->port, piece_index);
-
       /**** INTERESTED *****/
       message *interested_msg = init_message(MSG_ID_INTERESTED, 0, NULL);
       DEFER({ free_message(interested_msg); });
@@ -241,13 +231,23 @@ bool download_torrent(const char *torrent_fname, const char *output_fname)
           continue;
         case MSG_ID_UNCHOKE:
           fprintf(stdout, "received a \"Unchoke\" message\n");
-          do {
-            ok = download_piece(piece_index, tf->piece_length, c, output_fname);
+
+          while (!is_done(pp)) {
+            size_t piece_index = get_piece_index(pp);
+            if (!has_piece(peer_bf, piece_index)) {
+              fprintf(stdout, "peer %s:%hu doesn't have piece #%lu\n", peer_addr, p->port,
+                      piece_index);
+              mark_as_undone(pp, piece_index);
+              break;  // Go to the next peer
+            }
+            fprintf(stdout, "peer %s:%hu has piece #%lu\n", peer_addr, p->port, piece_index);
+            ok = download_piece(piece_index, tf->piece_length, c, tf);
             if (!ok) {
               mark_as_undone(pp, piece_index);
-              break;
+              break;  // Go to the next peer
             }
-          } while ((piece_index = get_piece_index(pp)) < pp->num_pieces);
+          }
+
           continue;
         case MSG_ID_INTERESTED:
           fprintf(stdout, "received a \"Interested\" message\n");
@@ -265,7 +265,6 @@ bool download_torrent(const char *torrent_fname, const char *output_fname)
           fprintf(stdout, "Unknown or useless message ID: %hu\n", recv_msg->id);
           continue;
       }
-      break;
       /*********************/
     }
   }
