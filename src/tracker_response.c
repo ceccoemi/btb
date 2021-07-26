@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defer.h"
 #include "hash.h"
 #include "peer.h"
 #include "peer_id.h"
@@ -55,7 +56,7 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   strcat(get_request, "&downloaded=0");
   strcat(get_request, "&compact=1");
   char left_param[64];
-  sprintf(left_param, "&left=%lld", tf->length);
+  sprintf(left_param, "&left=%lu", tf->length);
   strcat(get_request, left_param);
   strcat(get_request, "&info_hash=");
   char *encoded_info_hash = curl_easy_escape(curl, (char *)tf->info_hash, BT_HASH_LENGTH);
@@ -64,22 +65,21 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
 
   // Perform the request
   curl_easy_setopt(curl, CURLOPT_URL, get_request);
-  struct response_data *response = malloc(sizeof(struct response_data));
+  struct response_data response;
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, parse_response);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
   CURLcode out_code = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   curl_global_cleanup();
   if (out_code != CURLE_OK) {
-    free(response);
-    fprintf(stderr, "error in performing the request, curl error code: %d\n", out_code);
+    fprintf(stderr, "error in performing the request: %s\n", curl_easy_strerror(out_code));
     return false;
   }
 
   // Parse the response into tracker_response
-  tokenizer *tk = init_tokenizer(response->data, response->len);
-  free(response->data);
-  free(response);
+  tokenizer *tk = init_tokenizer(response.data, response.len);
+  free(response.data);
+  DEFER({ free_tokenizer(tk); });
   int err = next(tk);  // d
   if (err != TOKENIZER_OK) goto tokenizer_error;
   err = next(tk);  // s
@@ -112,22 +112,19 @@ bool contact_tracker(tracker_response *r, torrent_file *tf)
   r->num_peers = tk->token_size / PEER_BLOB_SIZE;
   r->peers = malloc(r->num_peers * sizeof(peer *));
   for (long i = 0; i < r->num_peers; i++) {
-    char *peer_repr = malloc(PEER_BLOB_SIZE);
+    unsigned char *peer_repr = malloc(PEER_BLOB_SIZE);
     memcpy(peer_repr, tk->token + (PEER_BLOB_SIZE * i), 6);
     r->peers[i] = init_peer(peer_repr);
     free(peer_repr);
   }
-  free_tokenizer(tk);
   return true;
 
 tokenizer_error:
   fprintf(stderr, "tokenizer error: %d\n", err);
-  free_tokenizer(tk);
   return false;
 
 tracker_response_parsing_error:
   fprintf(stderr, "unexpected tracker response: %.*s\n", (int)tk->data_size, tk->data);
-  free_tokenizer(tk);
   return false;
 }
 

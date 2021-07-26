@@ -7,19 +7,32 @@ CC := gcc
 WARNINGS := -Wall -Werror
 CSTD := c17
 CFLAGS := -g -std=$(CSTD) $(WARNINGS)
-LIBS := -lcrypto -lcurl -lpthread
+LIBS := -lcrypto -lcurl -lpthread -lm
 
 .PHONY: clean test
 
-all: test $(TARGET)
-
-$(TARGET): $(SRC_DIR)/main.c
-	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
-
-test: build
-	@ ./$(TARGET_TEST)
+all: test build
 
 build: \
+	hash.o \
+	tokenizer.o \
+	file_buf.o \
+	torrent_file.o \
+	peer.o \
+	tracker_response.o \
+	handshake_msg.o \
+	message.o \
+	bitfield.o \
+	pieces_pool.o \
+	piece_progress.o \
+	big_endian.o \
+	conn.o \
+	client.o \
+	$(SRC_DIR)/main.c
+
+	@ $(CC) $(CFLAGS) -o $(TARGET) $? $(LIBS)
+
+test: \
 	hash.o \
 	tokenizer.o tokenizer_test.o \
 	file_buf.o file_buf_test.o \
@@ -33,9 +46,17 @@ build: \
 	piece_progress.o \
 	big_endian.o big_endian_test.o \
 	conn.o conn_test.o \
+	client.o client_test.o \
 	$(TEST_DIR)/main.c
 
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
+	@ ./$(TARGET_TEST)
+
+client_test.o: $(TEST_DIR)/client_test.c
+	@ $(CC) $(CFLAGS) -c $?
+
+client.o: $(SRC_DIR)/client.c
+	@ $(CC) $(CFLAGS) -c $?
 
 conn_test.o: $(TEST_DIR)/conn_test.c
 	@ $(CC) $(CFLAGS) -c $?

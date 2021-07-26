@@ -1,8 +1,12 @@
 #include <stdio.h>
 
+#include "client.h"
 #include "version.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
-  printf("Hello from BTB version %d.%d\n", VERSION_MAJOR, VERSION_MINOR);
-}
+  if (argc != 2) {
+    fprintf(stdout, "Usage:\n\n btb <file.torrent>");
+  }
+  download_torrent(argv[1]);
+};

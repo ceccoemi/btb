@@ -5,21 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../src/defer.h"
 #include "tokenizer_test.h"
 
 void test_tokenization(char *input, long unsigned input_len, const char *want[], int num_tokens)
 {
   tokenizer *t = init_tokenizer(input, input_len);
+  DEFER({ free_tokenizer(t); });
   for (int i = 0; i < num_tokens; i++) {
     int err = next(t);
     if (err != TOKENIZER_OK) {
       fprintf(stderr, "%d-th next failed: got %d error code\n", i + 1, err);
-      free_tokenizer(t);
       return;
     }
     if (memcmp(t->token, want[i], t->token_size) != 0) {
       fprintf(stderr, "wrong %d-th token: got %s, want %s\n", i + 1, t->token, want[i]);
-      free_tokenizer(t);
       return;
     }
   }
@@ -29,7 +29,6 @@ void test_tokenization(char *input, long unsigned input_len, const char *want[],
     fprintf(stderr, "final next failed: got %d error code, want %d\n", err, TOKENIZER_END);
     return;
   }
-  free_tokenizer(t);
 }
 
 void test_tokenize_int(void)

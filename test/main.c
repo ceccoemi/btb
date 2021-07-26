@@ -2,6 +2,7 @@
 
 #include "big_endian_test.h"
 #include "bitfield_test.h"
+#include "client_test.h"
 #include "conn_test.h"
 #include "file_buf_test.h"
 #include "handshake_msg_test.h"

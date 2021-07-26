@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "../src/bitfield.h"
+#include "../src/defer.h"
 #include "../src/message.h"
 #include "../src/torrent_file.h"
 #include "../src/tracker_response.h"
@@ -11,6 +12,7 @@ void test_bitfield()
 {
   unsigned char data[2] = {10, 33};  // 00001010 00100001
   bitfield *b = init_bitfield(data, 2);
+  DEFER({ free_bitfield(b); });
   for (int i = 0; i < 4; i++) {
     if (has_piece(b, i)) {
       fprintf(stderr, "expected not having %d-th piece\n", i);
@@ -69,6 +71,4 @@ void test_bitfield()
   if (!has_piece(b, 12)) {
     fprintf(stderr, "should have %d-th piece\n", 12);
   }
-
-  free_bitfield(b);
 }

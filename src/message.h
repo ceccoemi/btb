@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "conn.h"
+
 // Number of bytes to represent the message length.
 #define MSG_LEN_BYTES 4
 // Number of bytes to represent the message ID.
@@ -43,3 +45,11 @@ void free_message_encoded(message_encoded *);
 // Decode a message from buf.
 // It returns NULL if it fails.
 message *decode_message(char *buf, size_t buf_length);
+
+// Send a message in the input connection.
+// It returns false if it fails.
+bool send_message_to_conn(message *msg, conn *c, int timeout_sec);
+
+// Read a message from the input connection.
+// It returns NULL if it fails.
+message *read_message_from_conn(conn *c, int timeout_sec);

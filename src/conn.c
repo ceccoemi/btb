@@ -16,7 +16,32 @@
 #include <sys/types.h>
 #include <time.h>
 
-conn* init_conn(char* addr, uint16_t port)
+#include "defer.h"
+
+struct connect_thread_data
+{
+  char* addr;
+  char* port_repr;
+  int sockfd;
+  struct addrinfo* res;
+  bool ok;
+};
+
+void* connect_thread_fun(void* data)
+{
+  struct connect_thread_data* d = (struct connect_thread_data*)data;
+  fprintf(stdout, "contacting %s:%s\n", d->addr, d->port_repr);
+  int err = connect(d->sockfd, d->res->ai_addr, d->res->ai_addrlen);
+  if (err != 0) {
+    fprintf(stdout, "connect failed: %s\n", strerror(errno));
+    d->ok = false;
+    return NULL;
+  }
+  d->ok = true;
+  return NULL;
+}
+
+conn* init_conn(char* addr, uint16_t port, int timeout_sec)
 {
   struct addrinfo hints;
   memset(&hints, 0, sizeof(hints));  // Make sure that the struct is empty
@@ -30,16 +55,34 @@ conn* init_conn(char* addr, uint16_t port)
     fprintf(stderr, "getaddrinfo failed: %s\n", gai_strerror(out));
     return NULL;
   }
+  DEFER({ freeaddrinfo(res); });
 
   int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-  fprintf(stdout, "contacting %s:%s\n", addr, port_repr);
-  int err = connect(sockfd, res->ai_addr, res->ai_addrlen);
-  freeaddrinfo(res);
-  if (err != 0) {
-    fprintf(stdout, "connect failed: %s\n", strerror(errno));
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+    fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
     return NULL;
   }
+  ts.tv_sec += timeout_sec;
+
+  struct connect_thread_data thread_data = {addr, port_repr, sockfd, res};
+  pthread_t thread_id;
+
+  pthread_create(&thread_id, NULL, connect_thread_fun, &thread_data);
+
+  int err = pthread_timedjoin_np(thread_id, NULL, &ts);
+  if (err != 0) {
+    fprintf(stdout, "timeout expired, aborting\n");
+    pthread_cancel(thread_id);
+    pthread_join(thread_id, NULL);
+    return NULL;
+  }
+  if (!thread_data.ok) {
+    fprintf(stderr, "can't connect with %s:%s\n", addr, port_repr);
+    return NULL;
+  }
+
   fprintf(stdout, "established a connection with %s:%s\n", addr, port_repr);
   conn* c = malloc(sizeof(conn));
   c->addr = malloc(strlen(addr) + 1);
@@ -62,12 +105,13 @@ struct thread_data
   char* buf;
   size_t buf_size;
   bool ok;
+  int recv_bytes;
 };
 
 void* send_thread_fun(void* data)
 {
   struct thread_data* d = (struct thread_data*)data;
-  fprintf(stdout, "sending data to %s:%hu\n", d->c->addr, d->c->port);
+  fprintf(stdout, "sending %lu bytes to %s:%hu\n", d->buf_size, d->c->addr, d->c->port);
   int bytes_sent = send(d->c->_sockfd, d->buf, d->buf_size, 0);
   if (bytes_sent < 0) {
     fprintf(stderr, "send failed: %s\n", strerror(errno));
@@ -84,13 +128,17 @@ void* send_thread_fun(void* data)
     d->ok = false;
     return NULL;
   }
-  fprintf(stdout, "sent %d bytes to %s%hu\n", bytes_sent, d->c->addr, d->c->port);
+  fprintf(stdout, "sent %d bytes to %s:%hu\n", bytes_sent, d->c->addr, d->c->port);
   d->ok = true;
   return NULL;
 }
 
 bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 {
+  if (c == NULL) {
+    fprintf(stderr, "connection not initialized\n");
+    return false;
+  }
   struct timespec ts;
   if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
     fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
@@ -116,7 +164,8 @@ bool send_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 void* recv_thread_fun(void* data)
 {
   struct thread_data* d = (struct thread_data*)data;
-  fprintf(stdout, "receiving data from %s:%hu\n", d->c->addr, d->c->port);
+  fprintf(stdout, "receiving at most %lu bytes from %s:%hu\n", d->buf_size, d->c->addr,
+          d->c->port);
   int bytes_received = recv(d->c->_sockfd, d->buf, d->buf_size, 0);
   if (bytes_received < 0) {
     fprintf(stderr, "recv failed: %s\n", strerror(errno));
@@ -128,17 +177,22 @@ void* recv_thread_fun(void* data)
     d->ok = false;
     return NULL;
   }
-  fprintf(stdout, "received %d bytes to %s%hu\n", bytes_received, d->c->addr, d->c->port);
+  fprintf(stdout, "received %d bytes from %s:%hu\n", bytes_received, d->c->addr, d->c->port);
   d->ok = true;
+  d->recv_bytes = bytes_received;
   return NULL;
 }
 
-bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
+int receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
 {
+  if (c == NULL) {
+    fprintf(stderr, "connection not initialized\n");
+    return -1;
+  }
   struct timespec ts;
   if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
     fprintf(stderr, "clock_gettime failed: %s\n", strerror(errno));
-    return false;
+    return -1;
   }
   ts.tv_sec += timeout_sec;
 
@@ -152,7 +206,7 @@ bool receive_data(conn* c, char* buf, size_t buf_size, int timeout_sec)
     fprintf(stdout, "timeout expired, aborting\n");
     pthread_cancel(thread_id);
     pthread_join(thread_id, NULL);
-    return false;
+    return -1;
   }
-  return thread_data.ok;
+  return thread_data.recv_bytes;
 }
