@@ -78,5 +78,8 @@ int main(void)
   fprintf(stdout, "\ttest_receive_data_with_timeout\n");
   test_receive_data_with_timeout();
 
+  // fprintf(stdout, "\ttest_client\n");
+  // test_client();
+
   fprintf(stdout, "done\n");
 }

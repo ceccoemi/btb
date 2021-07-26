@@ -50,7 +50,7 @@ test: \
 	$(TEST_DIR)/main.c
 
 	@ $(CC) $(CFLAGS) -o $(TARGET_TEST) $? $(LIBS)
-	@ ./$(TARGET_TEST)
+	@ valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET_TEST)
 
 client_test.o: $(TEST_DIR)/client_test.c
 	@ $(CC) $(CFLAGS) -c $?

@@ -7,10 +7,11 @@ Minimial BitTorrent command line client written in pure C with minimal dependenc
 * OpenSSL
 * pthread
 * curl
+* valgrind
 
 ## How to compile, test and run
 
-To compile and run the tests, `cd` into the root directory of the project and run
+To compile and run the tests (with valgrind checks), `cd` into the root directory of the project and run
 
     make
 
