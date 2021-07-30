@@ -13,9 +13,17 @@ void test_pieces_pool()
   if (is_done(pp)) {
     fprintf(stderr, "is_done should return false\n");
   }
+  if (get_num_undone_pieces(pp) != num_pieces) {
+    fprintf(stderr, "wrong num \"undone\" pieces: got %lu, want %lu\n", get_num_undone_pieces(pp),
+            num_pieces);
+  }
   size_t idx = get_piece_index(pp);
   if (idx >= num_pieces) {
     fprintf(stderr, "wrong index: got %li, want x < %li\n", idx, num_pieces);
+  }
+  if (get_num_undone_pieces(pp) != num_pieces - 1) {
+    fprintf(stderr, "wrong num \"undone\" pieces: got %lu, want %lu\n", get_num_undone_pieces(pp),
+            num_pieces - 1);
   }
   // Extract all pieces
   for (size_t i = 0; i < num_pieces - 1; i++) {

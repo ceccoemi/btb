@@ -24,3 +24,6 @@ size_t get_piece_index(pieces_pool*);
 void mark_as_undone(pieces_pool*, size_t piece_index);
 
 bool is_done(pieces_pool*);
+
+// Return the number of "undone" pieces left.
+size_t get_num_undone_pieces(pieces_pool*);

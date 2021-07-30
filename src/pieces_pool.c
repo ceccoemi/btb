@@ -23,7 +23,10 @@ size_t get_piece_index(pieces_pool* pool)
   return pool->num_pieces + 1;
 }
 
-void mark_as_undone(pieces_pool* pool, size_t index) { unset_piece(pool->current_bitfield, index); }
+void mark_as_undone(pieces_pool* pool, size_t index)
+{
+  unset_piece(pool->current_bitfield, index);
+}
 
 bool is_done(pieces_pool* pool)
 {
@@ -34,6 +37,17 @@ bool is_done(pieces_pool* pool)
     }
   }
   return pieces_sum == pool->num_pieces;
+}
+
+size_t get_num_undone_pieces(pieces_pool* pool)
+{
+  size_t pieces_sum = 0;
+  for (size_t i = 0; i < pool->num_pieces; i++) {
+    if (has_piece(pool->current_bitfield, i)) {
+      pieces_sum++;
+    }
+  }
+  return pool->num_pieces - pieces_sum;
 }
 
 void free_pieces_pool(pieces_pool* pool)
