@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "big_endian.h"
 #include "conn.h"
@@ -271,9 +272,14 @@ bool download_torrent(const char *torrent_fname)
     struct thread_data *data[num_threads];
     pthread_t thread_ids[num_threads];
 
+    // Start each time from a different random index
+    // to avoid blocking on the same non responding peers.
+    srand(time(NULL));
+    int rand_peer_start_index = rand() % (num_threads - 1);
+    fprintf(stdout, "random peer index: %d\n", rand_peer_start_index);
     for (size_t i = 0; i < num_threads; i++) {
       data[i] = malloc(sizeof(struct thread_data));
-      data[i]->p = tr->peers[i];
+      data[i]->p = tr->peers[(i + rand_peer_start_index) % tr->num_peers];
       data[i]->tf = tf;
       data[i]->p_prog = init_piece_progress(get_piece_index(pp), tf->piece_length);
       pthread_create(&thread_ids[i], NULL, download_torrent_thread_fun, data[i]);
@@ -287,17 +293,17 @@ bool download_torrent(const char *torrent_fname)
         memcpy(pieces_bufs[data[i]->p_prog->index], data[i]->p_prog->buf, tf->piece_length);
       } else {
         fprintf(stdout, "peer #%lu failed to download piece #%lu\n", i, data[i]->p_prog->index);
-        // mark_as_undone(pp, data[i]->p_prog->index);
+        mark_as_undone(pp, data[i]->p_prog->index);
       }
+      free_piece_progress(data[i]->p_prog);
       free(data[i]);
     }
-    break;
+    // break;  // For now, stop at the first round
   }
 
   while (!is_done(pp)) {
     fprintf(stdout, "piece #%lu has to be downloaded\n", get_piece_index(pp));
   }
-  exit(2);
 
   FILE *f = fopen(tf->name, "a");
   if (f == NULL) {

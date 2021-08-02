@@ -64,13 +64,11 @@ int main(void)
     fprintf(stdout, "\ttest_message_encode_decode\n");
     test_message_encode_decode();
 
-    */
   fprintf(stdout, "\ttest_bitfield\n");
   test_bitfield();
   fprintf(stdout, "\ttest_bitfield_set_first_as_undone\n");
   test_bitfield_set_first_as_undone();
 
-  /*
   fprintf(stdout, "\ttest_pieces_pool\n");
   test_pieces_pool();
 
@@ -84,8 +82,8 @@ int main(void)
       test_receive_data_with_timeout();
       */
 
-  // fprintf(stdout, "\ttest_client\n");
-  // test_client();
+  fprintf(stdout, "\ttest_client\n");
+  test_client();
 
   fprintf(stdout, "done\n");
 }
