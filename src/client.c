@@ -276,7 +276,7 @@ bool download_torrent(const char *torrent_fname)
       data[i]->p = tr->peers[i];
       data[i]->tf = tf;
       data[i]->p_prog = init_piece_progress(get_piece_index(pp), tf->piece_length);
-      thread_ids[i] = pthread_create(&thread_ids[i], NULL, download_torrent_thread_fun, data[i]);
+      pthread_create(&thread_ids[i], NULL, download_torrent_thread_fun, data[i]);
     }
 
     for (size_t i = 0; i < num_threads; i++) {
@@ -287,11 +287,17 @@ bool download_torrent(const char *torrent_fname)
         memcpy(pieces_bufs[data[i]->p_prog->index], data[i]->p_prog->buf, tf->piece_length);
       } else {
         fprintf(stdout, "peer #%lu failed to download piece #%lu\n", i, data[i]->p_prog->index);
-        mark_as_undone(pp, data[i]->p_prog->index);
+        // mark_as_undone(pp, data[i]->p_prog->index);
       }
       free(data[i]);
     }
+    break;
   }
+
+  while (!is_done(pp)) {
+    fprintf(stdout, "piece #%lu has to be downloaded\n", get_piece_index(pp));
+  }
+  exit(2);
 
   FILE *f = fopen(tf->name, "a");
   if (f == NULL) {
