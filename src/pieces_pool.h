@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pthread.h>
 #include <stdio.h>
 
 #include "bitfield.h"
@@ -8,6 +9,7 @@ typedef struct pieces_pool
 {
   bitfield* current_bitfield;
   size_t num_pieces;
+  pthread_mutex_t _mutex;
 } pieces_pool;
 
 // Init a pieces pool with n piece indexes from 0 to n-1.
