@@ -102,7 +102,23 @@ message* read_message_from_conn(conn* c, int timeout_sec)
             bytes_received);
     return NULL;
   }
-  unsigned long payload_len = big_endian_to_lu((unsigned char*)buf, MSG_LEN_BYTES) - MSG_ID_BYTES;
+  unsigned long payload_len_plus_msg_id_len = big_endian_to_lu((unsigned char*)buf, MSG_LEN_BYTES);
+  if (payload_len_plus_msg_id_len == 0) {
+    fprintf(stderr, "got invalid msg len and id:");
+    for (size_t i = 0; i < MSG_LEN_BYTES + MSG_ID_BYTES; i++) {
+      fprintf(stderr, " %d", (unsigned char)buf[i]);
+    }
+    fprintf(stderr, "\n");
+    exit(2);
+    return NULL;
+  }
+  fprintf(stdout, "FIRST 5 BYTES:\n");
+  for (size_t i = 0; i < MSG_LEN_BYTES + MSG_ID_BYTES; i++) {
+    fprintf(stderr, " %d", (unsigned char)buf[i]);
+  }
+  fprintf(stderr, "\n");
+  fprintf(stdout, "SIZE: %lu\n", payload_len_plus_msg_id_len);
+  unsigned long payload_len = payload_len_plus_msg_id_len - MSG_ID_BYTES;
   uint8_t msg_id = buf[MSG_LEN_BYTES];
   fprintf(stdout, "got msg ID=%hu and an expected payload of %lu bytes\n", msg_id, payload_len);
   char* payload_buf = malloc(payload_len);
