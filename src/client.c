@@ -18,10 +18,10 @@
 #include "torrent_file.h"
 #include "tracker_response.h"
 
-#define TIMEOUT_SEC 5
+#define TIMEOUT_SEC 10
 // Maximum number of attempts that a peer-thread can make to download a piece
 // before aborting it.
-#define PEER_MAX_ATTEMPTS 3
+#define PEER_MAX_ATTEMPTS 10
 
 static bool download_piece(piece_progress *p_prog, size_t piece_size, conn *c, torrent_file *tf)
 {
@@ -136,7 +136,7 @@ static void free_thread_data(thread_data *d)
 {
   if (d == NULL) return;
   for (size_t i = 0; i < d->num_downloaded_pieces; i++) {
-    free(d->p_progs[i]);
+    free_piece_progress(d->p_progs[i]);
   }
   free(d->p_progs);
   free(d);
@@ -319,16 +319,8 @@ bool download_torrent(const char *torrent_fname)
   pieces_pool *pp = init_pieces_pool(tf->num_pieces);
   DEFER({ free_pieces_pool(pp); });
 
-  /*
-    char *pieces_bufs[tf->num_pieces];
-    for (size_t i = 0; i < tf->num_pieces; i++) {
-      pieces_bufs[i] = malloc(tf->piece_length);
-    }
-    */
-
   // Each peer is a separated thread.
-  // size_t num_threads = tr->num_peers;
-  size_t num_threads = 8;
+  size_t num_threads = tr->num_peers;
   thread_data *data[num_threads];
   pthread_t thread_ids[num_threads];
   for (size_t i = 0; i < num_threads; i++) {
@@ -337,37 +329,50 @@ bool download_torrent(const char *torrent_fname)
   }
 
   for (size_t i = 0; i < num_threads; i++) {
+    fprintf(stdout, "waiting for thread #%lu\n", i);
     pthread_join(thread_ids[i], NULL);
-    free_thread_data(data[i]);  // TODO: REMOVE THIS
   }
 
   fprintf(stdout, "%lu/%lu pieces have been downloaded\n",
           pp->num_pieces - get_num_undone_pieces(pp), pp->num_pieces);
-  /*
-  while (!is_done(pp)) {
-    fprintf(stdout, "piece #%lu has to be downloaded\n", get_piece_index(pp));
+
+  FILE *f = fopen(tf->name, "a");
+  if (f == NULL) {
+    fprintf(stderr, "failed to open the file %s\n", tf->name);
+    return false;
   }
-  */
+  DEFER({ fclose(f); });
+  for (size_t i = 0; i < tf->num_pieces; i++) {
+    char *piece_buf;
 
-  // TODO: sort piece indexes
+    // Find the piece among the thread's piece_progress
+    bool found = false;
+    for (size_t j = 0; j < num_threads; j++) {
+      for (size_t k = 0; k < data[j]->num_downloaded_pieces; k++) {
+        if (data[j]->p_progs[k]->index == i) {
+          piece_buf = data[j]->p_progs[k]->buf;
+          goto out_piece_find;
+        }
+      }
+    }
+  out_piece_find:
+    if (!found) {
+      fprintf(stderr, "can't find piece #%lu\n", i);
+      break;
+    }
 
-  /*
-    FILE *f = fopen(tf->name, "a");
-    if (f == NULL) {
-      fprintf(stderr, "failed to open the file %s\n", tf->name);
+    int bytes_written = fwrite(piece_buf, 1, tf->piece_length, f);
+    if (bytes_written != tf->piece_length) {
+      fprintf(stderr, "failed to write to file: written %d bytes, expected %lu\n", bytes_written,
+              tf->piece_length);
       return false;
     }
-    DEFER({ fclose(f); });
-    for (size_t i = 0; i < tf->num_pieces; i++) {
-      DEFER({ free(pieces_bufs[i]); });
-      int bytes_written = fwrite(pieces_bufs[i], 1, tf->piece_length, f);
-      if (bytes_written != tf->piece_length) {
-        fprintf(stderr, "failed to write to file: written %d bytes, expected %lu\n", bytes_written,
-                tf->piece_length);
-        return false;
-      }
-      fprintf(stdout, "written %d bytes in %s\n", bytes_written, tf->name);
-    }
-    */
+    fprintf(stdout, "written %d bytes in %s\n", bytes_written, tf->name);
+  }
+
+  for (size_t i = 0; i < num_threads; i++) {
+    free_thread_data(data[i]);
+  }
+
   return true;
 }
