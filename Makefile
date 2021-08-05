@@ -6,8 +6,12 @@ TEST_DIR := test
 CC := gcc
 WARNINGS := -Wall -Werror
 CSTD := c17
-CFLAGS := -std=$(CSTD) $(WARNINGS)
+CFLAGS_ALL := -std=$(CSTD) $(WARNINGS)
+CFLAGS_TEST := -g
+CFLAGS_RELEASE := -O3
 LIBS := -lcrypto -lcurl -lpthread -lm
+VALGRIND_SUPP_FILE := valgrind.supp
+VALGRIND_CMD := valgrind --leak-check=full --show-leak-kinds=all --suppressions=$(VALGRIND_SUPP_FILE)
 
 .PHONY: clean test
 
@@ -30,7 +34,7 @@ build: \
 	client.o \
 	$(SRC_DIR)/main.c
 
-	@ $(CC) $(CFLAGS) -O3 -o $(TARGET) $? $(LIBS)
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_RELEASE) -o $(TARGET) $? $(LIBS)
 
 test: \
 	hash.o \
@@ -49,8 +53,8 @@ test: \
 	client.o client_test.o \
 	$(TEST_DIR)/main.c
 
-	@ $(CC) $(CFLAGS) -g -o $(TARGET_TEST) $? $(LIBS)
-	@ valgrind --leak-check=full --show-leak-kinds=all --suppressions=valgrind.supp ./$(TARGET_TEST)
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_TEST) -o $(TARGET_TEST) $? $(LIBS)
+	$(VALGRIND_CMD) ./$(TARGET_TEST)
 
 client_test.o: $(TEST_DIR)/client_test.c
 	@ $(CC) $(CFLAGS) -c $?
