@@ -72,3 +72,64 @@ void test_bitfield()
     fprintf(stderr, "should have %d-th piece\n", 12);
   }
 }
+
+void test_bitfield_set_first_as_undone()
+{
+  unsigned char bf_data[2] = {0, 0};  // 00000000 0000000
+  bitfield *bf = init_bitfield(bf_data, 2);
+  DEFER({ free_bitfield(bf); });
+  for (size_t i = 0; i < 2 * 8; i++) {
+    if (has_piece(bf, i)) {
+      fprintf(stderr, "bitfield shouldn't have piece #%lu\n", i);
+    }
+  }
+  set_piece(bf, 0);
+  if (!has_piece(bf, 0)) {
+    fprintf(stderr, "bitfield should have piece 0\n");
+  }
+  for (size_t i = 1; i < 2 * 8; i++) {
+    if (has_piece(bf, i)) {
+      fprintf(stderr, "bitfield shouldn't have piece #%lu\n", i);
+    }
+  }
+  for (size_t i = 0; i < 2 * 8; i++) {
+    set_piece(bf, i);
+  }
+  for (size_t i = 0; i < 2 * 8; i++) {
+    if (!has_piece(bf, i)) {
+      fprintf(stderr, "bitfield should have piece #%lu\n", i);
+    }
+  }
+  unset_piece(bf, 0);
+  if (has_piece(bf, 0)) {
+    fprintf(stderr, "bitfield shouldn't have piece 0\n");
+  }
+  for (size_t i = 1; i < 2 * 8; i++) {
+    if (!has_piece(bf, i)) {
+      fprintf(stderr, "bitfield should have piece #%lu\n", i);
+    }
+  }
+  for (size_t i = 0; i < 2 * 8; i++) {
+    set_piece(bf, i);
+  }
+  for (size_t i = 0; i < 2 * 8; i++) {
+    if (!has_piece(bf, i)) {
+      fprintf(stderr, "bitfield should have piece #%lu\n", i);
+    }
+  }
+  unset_piece(bf, 13);
+  if (has_piece(bf, 13)) {
+    fprintf(stderr, "bitfield shouldn't have piece 13\n");
+  }
+  for (size_t i = 0; i < 2 * 8; i++) {
+    if (i == 13) {
+      if (has_piece(bf, 13)) {
+        fprintf(stderr, "bitfield shouldn't have piece 13\n");
+      }
+    } else {
+      if (!has_piece(bf, i)) {
+        fprintf(stderr, "bitfield should have piece #%lu\n", i);
+      }
+    }
+  }
+}

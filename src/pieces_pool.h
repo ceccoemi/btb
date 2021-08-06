@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pthread.h>
 #include <stdio.h>
 
 #include "bitfield.h"
@@ -8,6 +9,7 @@ typedef struct pieces_pool
 {
   bitfield* current_bitfield;
   size_t num_pieces;
+  pthread_mutex_t _mutex;
 } pieces_pool;
 
 // Init a pieces pool with n piece indexes from 0 to n-1.
@@ -24,3 +26,6 @@ size_t get_piece_index(pieces_pool*);
 void mark_as_undone(pieces_pool*, size_t piece_index);
 
 bool is_done(pieces_pool*);
+
+// Return the number of "undone" pieces left.
+size_t get_num_undone_pieces(pieces_pool*);

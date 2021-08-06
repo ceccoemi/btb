@@ -58,3 +58,5 @@ btb
 btb-test
 # torrent test files
 *.torrent
+*.log
+*.iso

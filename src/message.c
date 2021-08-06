@@ -91,7 +91,7 @@ message* read_message_from_conn(conn* c, int timeout_sec)
 {
   size_t buf_size = MSG_LEN_BYTES + MSG_ID_BYTES;
   char buf[buf_size];
-  fprintf(stdout, "reading first %lu bytes of the message\n", buf_size);
+  // fprintf(stdout, "reading first %lu bytes of the message\n", buf_size);
   int bytes_received = receive_data(c, buf, buf_size, timeout_sec);
   if (bytes_received <= 0) {
     fprintf(stderr, "receive_data failed\n");
@@ -102,13 +102,22 @@ message* read_message_from_conn(conn* c, int timeout_sec)
             bytes_received);
     return NULL;
   }
-  unsigned long payload_len = big_endian_to_lu((unsigned char*)buf, MSG_LEN_BYTES) - MSG_ID_BYTES;
+  unsigned long payload_len_plus_msg_id_len = big_endian_to_lu((unsigned char*)buf, MSG_LEN_BYTES);
+  if (payload_len_plus_msg_id_len == 0) {
+    fprintf(stderr, "got invalid msg len and id:");
+    for (size_t i = 0; i < MSG_LEN_BYTES + MSG_ID_BYTES; i++) {
+      fprintf(stderr, " %d", (unsigned char)buf[i]);
+    }
+    fprintf(stderr, "\n");
+    return NULL;
+  }
+  unsigned long payload_len = payload_len_plus_msg_id_len - MSG_ID_BYTES;
   uint8_t msg_id = buf[MSG_LEN_BYTES];
-  fprintf(stdout, "got msg ID=%hu and an expected payload of %lu bytes\n", msg_id, payload_len);
+  // fprintf(stdout, "got msg ID=%hu and an expected payload of %lu bytes\n", msg_id, payload_len);
   char* payload_buf = malloc(payload_len);
   DEFER({ free(payload_buf); });
   if (payload_len > 0) {
-    fprintf(stdout, "reading message payload\n");
+    // fprintf(stdout, "reading message payload\n");
     int bytes_received = 0;
     while (bytes_received < payload_len) {
       int received =
@@ -117,7 +126,7 @@ message* read_message_from_conn(conn* c, int timeout_sec)
         fprintf(stderr, "receive_data failed\n");
         return NULL;
       }
-      fprintf(stdout, "received %d bytes of message payload\n", received);
+      // fprintf(stdout, "received %d bytes of message payload\n", received);
       bytes_received += received;
     }
   }
