@@ -2,8 +2,8 @@ TARGET := btb
 TARGET_TEST := btb-test
 SRC_DIR := src
 TEST_DIR := test
-TARGET_MAIN := $(SRC_DIR)/main.c
-TARGET_TEST_MAIN := $(TEST_DIR)/main.c
+TARGET_MAIN := main.c
+TARGET_TEST_MAIN := main_test.c
 VPATH = $(SRC_DIR) $(TEST_DIR)
 
 CC := gcc
@@ -21,44 +21,18 @@ VALGRIND_CMD := valgrind --leak-check=full --show-leak-kinds=all --track-origins
 all: test build
 
 build: $(TARGET_MAIN) src_obj
-	$(CC) $(CFLAGS_ALL) $(CFLAGS_RELEASE) -o $(TARGET) *.o $< $(LIBS)
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_RELEASE) -I $(SRC_DIR) -o $(TARGET) *.o $< $(LIBS)
 
 test: $(TARGET_TEST_MAIN) src_obj test_obj
-	$(CC) $(CFLAGS_ALL) $(CFLAGS_TEST) -o $(TARGET_TEST) *.o $< $(LIBS)
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_TEST) -I $(SRC_DIR) -I $(TEST_DIR) -o $(TARGET_TEST) *.o $< $(LIBS)
 	$(VALGRIND_CMD) ./$(TARGET_TEST)
 
-test_obj: \
-	tokenizer_test.o \
-	file_buf_test.o \
-	torrent_file_test.o \
-	peer_test.o \
-	handshake_msg_test.o \
-	message_test.o \
-	bitfield_test.o \
-	pieces_pool_test.o \
-	piece_progress.o \
-	big_endian_test.o \
-	conn_test.o \
-	client_test.o \
-
+test_objects := $(patsubst %.c,%.o,$(wildcard $(TEST_DIR)/*.c))
+test_obj: $(test_objects)
 	@ touch test_obj
 
-src_obj: \
-	hash.o \
-	tokenizer.o \
-	file_buf.o \
-	torrent_file.o \
-	peer.o \
-	tracker_response.o \
-	handshake_msg.o \
-	message.o \
-	bitfield.o \
-	pieces_pool.o \
-	piece_progress.o \
-	big_endian.o \
-	conn.o \
-	client.o \
-
+src_objects := $(patsubst %.c,%.o,$(wildcard $(SRC_DIR)/*.c))
+src_obj: $(src_objects)
 	@ touch src_obj
 
 %.o: %.c
