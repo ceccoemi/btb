@@ -1,7 +1,10 @@
 TARGET := btb
-SRC_DIR := src
 TARGET_TEST := btb-test
+SRC_DIR := src
 TEST_DIR := test
+TARGET_MAIN := $(SRC_DIR)/main.c
+TARGET_TEST_MAIN := $(TEST_DIR)/main.c
+VPATH = $(SRC_DIR) $(TEST_DIR)
 
 CC := gcc
 WARNINGS := -Wall -Werror
@@ -11,17 +14,17 @@ CFLAGS_TEST := -g
 CFLAGS_RELEASE := -O3
 LIBS := -lcrypto -lcurl -lpthread -lm
 VALGRIND_SUPP_FILE := valgrind.supp
-VALGRIND_CMD := valgrind --leak-check=full --show-leak-kinds=all --suppressions=$(VALGRIND_SUPP_FILE)
+VALGRIND_CMD := valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --suppressions=$(VALGRIND_SUPP_FILE)
 
 .PHONY: clean test
 
 all: test build
 
-build: src_obj $(SRC_DIR)/main.c
-	$(CC) $(CFLAGS_ALL) $(CFLAGS_RELEASE) -o $(TARGET) $? $(LIBS)
+build: $(TARGET_MAIN) src_obj
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_RELEASE) -o $(TARGET) *.o $< $(LIBS)
 
-test: src_obj test_obj $(TEST_DIR)/main.c
-	$(CC) $(CFLAGS_ALL) $(CFLAGS_TEST) -o $(TARGET_TEST) $? $(LIBS)
+test: $(TARGET_TEST_MAIN) src_obj test_obj
+	$(CC) $(CFLAGS_ALL) $(CFLAGS_TEST) -o $(TARGET_TEST) *.o $< $(LIBS)
 	$(VALGRIND_CMD) ./$(TARGET_TEST)
 
 test_obj: \
@@ -58,10 +61,7 @@ src_obj: \
 
 	@ touch src_obj
 
-%.o: $(TEST_DIR)/%.c
-	$(CC) $(CFLAGS_ALL) -c $<
-
-%.o: $(SRC_DIR)/%.c
+%.o: %.c
 	$(CC) $(CFLAGS_ALL) -c $<
 
 clean:
