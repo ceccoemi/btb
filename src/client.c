@@ -19,7 +19,7 @@
 #include "tracker_response.h"
 
 #define TIMEOUT_SEC 5
-#define PEER_MAX_ROUNDS 2
+#define PEER_MAX_ROUNDS 8
 
 static bool download_piece(piece_progress *p_prog, size_t piece_size, conn *c, torrent_file *tf)
 {
@@ -245,7 +245,8 @@ static void *download_torrent_thread_fun(void *data)
           fprintf(stdout, "peer %s:%hu doesn't have piece #%lu\n", peer_addr, d->p->port,
                   piece_index);
           mark_as_undone(d->pool, piece_index);
-          continue;  // Try to download another piece
+          // continue;  // Try to download another piece
+          break;  // Stop as soon as it fails
         }
         fprintf(stdout, "peer %s:%hu has piece #%lu\n", peer_addr, d->p->port, piece_index);
         d->p_progs[d->num_downloaded_pieces] =
@@ -255,7 +256,8 @@ static void *download_torrent_thread_fun(void *data)
           free_piece_progress(d->p_progs[d->num_downloaded_pieces]);
           d->p_progs[d->num_downloaded_pieces] = NULL;
           mark_as_undone(d->pool, piece_index);
-          continue;  // Try to download another piece
+          // continue;  // Try to download another piece
+          break;  // Stop as soon as it fails
         }
         fprintf(stdout, "peer %s:%hu succeeded to download piece #%lu\n", peer_addr, d->p->port,
                 piece_index);

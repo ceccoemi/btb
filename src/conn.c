@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "defer.h"
 
@@ -96,6 +97,7 @@ void free_conn(conn* c)
 {
   if (c == NULL) return;
   free(c->addr);
+  close(c->_sockfd);
   free(c);
 }
 
