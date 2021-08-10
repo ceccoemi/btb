@@ -32,8 +32,12 @@ int main(void)
   fprintf(stdout, "\ttest_tokenize_str_with_null_char\n");
   test_tokenize_str_with_null_char();
 
+*/
   fprintf(stdout, "\ttest_read_file\n");
   test_read_file();
+  fprintf(stdout, "\ttest_write_file\n");
+  test_write_file();
+  /*
 
   fprintf(stdout, "\ttest_lu_to_big_endian_4_bytes\n");
   test_lu_to_big_endian_4_bytes();
@@ -86,8 +90,8 @@ int main(void)
 
   // This test tries to perform a full downloaded of a torrent file
   // It takes a lot of time
-  fprintf(stdout, "\ttest_client\n");
-  test_client();
+  // fprintf(stdout, "\ttest_client\n");
+  // test_client();
 
   fprintf(stdout, "done tests\n");
 }

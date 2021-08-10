@@ -19,8 +19,8 @@
 #include "tracker_response.h"
 
 #define TIMEOUT_SEC 5
-// Each peer, which corresponds to a thread, will perform PEER_MAX_ROUNDS attempts to download a
-// piece.
+// Each peer, which corresponds to a thread,
+// will perform PEER_MAX_ROUNDS attempts to download a piece.
 #define PEER_MAX_ROUNDS 8
 
 static bool download_piece(piece_progress *p_prog, size_t piece_size, conn *c, torrent_file *tf)
