@@ -12,6 +12,7 @@ typedef struct piece_progress
   size_t index;
   size_t size;
   char *buf;
+  // Number of downloaded blocks
   size_t downloaded;
 } piece_progress;
 
