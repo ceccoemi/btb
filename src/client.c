@@ -284,8 +284,6 @@ bool download_torrent(const char *torrent_fname)
     fprintf(stderr, "parse_torrent_file failed\n");
     return false;
   }
-  // Remove the output file if it exists.
-  remove(tf->name);
   fprintf(stdout,
           "the file is %lu bytes total and it is divided in %lu pieces of %lu bytes each\n",
           tf->length, tf->num_pieces, tf->piece_length);

@@ -4,6 +4,7 @@
 #include "bitfield_test.h"
 #include "client_test.h"
 #include "conn_test.h"
+#include "downloaded_file_test.h"
 #include "file_buf_test.h"
 #include "handshake_msg_test.h"
 #include "message_test.h"
@@ -86,10 +87,13 @@ int main(void)
   test_receive_data_with_timeout();
   */
 
+  fprintf(stdout, "\ttest_downloaded_file\n");
+  test_downloaded_file();
+
   // This test tries to perform a full downloaded of a torrent file
   // It takes a lot of time
-  fprintf(stdout, "\ttest_client\n");
-  test_client();
+  // fprintf(stdout, "\ttest_client\n");
+  // test_client();
 
   fprintf(stdout, "done tests\n");
 }
