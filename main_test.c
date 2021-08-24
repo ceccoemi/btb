@@ -85,15 +85,15 @@ int main(void)
   test_send_data();
   fprintf(stdout, "\ttest_receive_data_with_timeout\n");
   test_receive_data_with_timeout();
-  */
 
   fprintf(stdout, "\ttest_downloaded_file\n");
   test_downloaded_file();
+  */
 
   // This test tries to perform a full downloaded of a torrent file
   // It takes a lot of time
-  // fprintf(stdout, "\ttest_client\n");
-  // test_client();
+  fprintf(stdout, "\ttest_client\n");
+  test_client();
 
   fprintf(stdout, "done tests\n");
 }

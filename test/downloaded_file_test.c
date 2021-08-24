@@ -18,28 +18,25 @@ struct thread_data
 static void *thread_fun(void *d)
 {
   struct thread_data *data = (struct thread_data *)d;
-  piece_progress *pp = init_piece_progress(data->index, 10);
+  piece_progress *pp = init_piece_progress(data->index, 4);
   DEFER({ free_piece_progress(pp); });
-  char thread_out[10];
-  sprintf(thread_out, "thread %lu\n", data->index);  // string must be 10 bytes
-  strcpy(pp->buf, thread_out);
-  pp->downloaded = 1;  // One single block
-  fprintf(stdout, "adding piece #%lu\n", data->index);
+  strcpy(pp->buf, "xx\n");  // Must write 4 bytes
+  pp->downloaded = 1;       // One single block
   add_piece(data->df, pp);
   return NULL;
 }
 
 void test_downloaded_file()
 {
-  size_t num_threads = 10;
+  size_t num_threads = 100;
 
   const char *output_fname = "test/data/downloaded_file.txt";
 
   torrent_file *tf = init_torrent_file();
   DEFER({ free_torrent_file(tf); });
   tf->num_pieces = num_threads;
-  tf->piece_length = 10;  // Each must write 10 bytes
-  tf->length = 10 * num_threads;
+  tf->piece_length = 4;
+  tf->length = 4 * num_threads;
   tf->name = malloc(strlen(output_fname) + 1);  // It will be free in free_torrent_file()
   strcpy(tf->name, output_fname);
 
