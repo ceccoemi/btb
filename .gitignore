@@ -60,3 +60,6 @@ btb-test
 *.torrent
 *.log
 *.iso
+*.txt
+src_obj
+test_obj

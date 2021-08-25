@@ -9,6 +9,7 @@
 #include "big_endian.h"
 #include "conn.h"
 #include "defer.h"
+#include "downloaded_file.h"
 #include "handshake_msg.h"
 #include "message.h"
 #include "peer.h"
@@ -19,7 +20,9 @@
 #include "tracker_response.h"
 
 #define TIMEOUT_SEC 5
-#define PEER_MAX_ROUNDS 8
+// Each peer, which corresponds to a thread
+// will be aborted after PEER_MAX_FAILS failed attempt to download a piece.
+#define PEER_MAX_FAILS 8
 
 static bool download_piece(piece_progress *p_prog, size_t piece_size, conn *c, torrent_file *tf)
 {
@@ -105,27 +108,18 @@ typedef struct thread_data
   peer *p;
   torrent_file *tf;
   pieces_pool *pool;
-  size_t num_downloaded_pieces;
-  // p_prog is an array of size torrent_file->num_pieces.
-  // It will contains a piece_progress for each downloaded piece,
-  // in the other position it contains NULL.
-  piece_progress **p_progs;
+  downloaded_file *df;
   bool ok;
 } thread_data;
 
-static thread_data *init_thread_data(peer *p, torrent_file *tf, pieces_pool *pool)
+static thread_data *init_thread_data(peer *p, torrent_file *tf, pieces_pool *pool,
+                                     downloaded_file *df)
 {
   thread_data *d = malloc(sizeof(thread_data));
   d->p = p;
   d->tf = tf;
   d->pool = pool;
-  d->num_downloaded_pieces = 0;
-  d->p_progs = malloc(tf->num_pieces);
-  /*
-  for (size_t i = 0; i < tf->num_pieces; i++) {
-    d->p_progs[i] = NULL;
-  }
-  */
+  d->df = df;
   d->ok = false;
   return d;
 }
@@ -133,10 +127,6 @@ static thread_data *init_thread_data(peer *p, torrent_file *tf, pieces_pool *poo
 static void free_thread_data(thread_data *d)
 {
   if (d == NULL) return;
-  for (size_t i = 0; i < d->num_downloaded_pieces; i++) {
-    free_piece_progress(d->p_progs[i]);
-  }
-  free(d->p_progs);
   free(d);
 }
 
@@ -237,31 +227,28 @@ static void *download_torrent_thread_fun(void *data)
 
       /*** Try to download pieces ***/
 
-      int rounds = 0;
-      while (!is_done(d->pool) && rounds < PEER_MAX_ROUNDS) {
-        rounds++;
+      int failed_attempts = 0;
+      while (!is_done(d->pool) && failed_attempts < PEER_MAX_FAILS) {
         size_t piece_index = get_piece_index(d->pool);
         if (!has_piece(peer_bf, piece_index)) {
           fprintf(stdout, "peer %s:%hu doesn't have piece #%lu\n", peer_addr, d->p->port,
                   piece_index);
           mark_as_undone(d->pool, piece_index);
-          // continue;  // Try to download another piece
-          break;  // Stop as soon as it fails
+          failed_attempts++;
+          continue;  // Try to download another piece
         }
         fprintf(stdout, "peer %s:%hu has piece #%lu\n", peer_addr, d->p->port, piece_index);
-        d->p_progs[d->num_downloaded_pieces] =
-            init_piece_progress(piece_index, d->tf->piece_length);
-        ok = download_piece(d->p_progs[d->num_downloaded_pieces], d->tf->piece_length, c, d->tf);
+        piece_progress *p_prog = init_piece_progress(piece_index, d->tf->piece_length);
+        DEFER({ free_piece_progress(p_prog); });
+        ok = download_piece(p_prog, d->tf->piece_length, c, d->tf);
         if (!ok) {
-          free_piece_progress(d->p_progs[d->num_downloaded_pieces]);
-          d->p_progs[d->num_downloaded_pieces] = NULL;
           mark_as_undone(d->pool, piece_index);
-          // continue;  // Try to download another piece
-          break;  // Stop as soon as it fails
+          failed_attempts++;
+          continue;  // Try to download another piece
         }
         fprintf(stdout, "peer %s:%hu succeeded to download piece #%lu\n", peer_addr, d->p->port,
                 piece_index);
-        d->num_downloaded_pieces++;
+        add_piece(d->df, p_prog);
       }
       break;  // Success
 
@@ -297,8 +284,6 @@ bool download_torrent(const char *torrent_fname)
     fprintf(stderr, "parse_torrent_file failed\n");
     return false;
   }
-  // Remove the output file if it exists.
-  remove(tf->name);
   fprintf(stdout,
           "the file is %lu bytes total and it is divided in %lu pieces of %lu bytes each\n",
           tf->length, tf->num_pieces, tf->piece_length);
@@ -316,48 +301,38 @@ bool download_torrent(const char *torrent_fname)
   DEFER({ free_pieces_pool(pp); });
 
   // Buffer that will hold the pieces when they have been downloaded.
-  char *pieces_buf[tf->num_pieces];
+  downloaded_file *df = init_downloaded_file(tf);
+  DEFER({ free_downloaded_file(df); });
 
-  while (!is_done(pp)) {
-    size_t num_threads = tr->num_peers;
-    thread_data *data[num_threads];
-    pthread_t thread_ids[num_threads];
-    for (size_t i = 0; i < num_threads; i++) {
-      data[i] = init_thread_data(tr->peers[i], tf, pp);
-      pthread_create(&thread_ids[i], NULL, download_torrent_thread_fun, data[i]);
-    }
+  // Each peer corresponds to a thread
+  size_t num_threads = tr->num_peers;
+  // size_t num_threads = 1;
+  thread_data *data[num_threads];
+  pthread_t thread_ids[num_threads];
 
-    for (size_t i = 0; i < num_threads; i++) {
-      fprintf(stdout, "waiting for thread #%lu\n", i);
-      pthread_join(thread_ids[i], NULL);
-      for (size_t j = 0; j < data[i]->num_downloaded_pieces; j++) {
-        fprintf(stdout, "copyng buf of piece #%lu\n", data[i]->p_progs[j]->index);
-        pieces_buf[data[i]->p_progs[j]->index] = malloc(tf->piece_length);
-        memcpy(pieces_buf[data[i]->p_progs[j]->index], data[i]->p_progs[j]->buf, tf->piece_length);
-      }
-      free_thread_data(data[i]);
-    }
-
-    fprintf(stdout, "%lu/%lu pieces have been downloaded\n",
-            pp->num_pieces - get_num_undone_pieces(pp), pp->num_pieces);
-    // break;
+  for (size_t i = 0; i < num_threads; i++) {
+    data[i] = init_thread_data(tr->peers[i], tf, pp, df);
+    pthread_create(&thread_ids[i], NULL, download_torrent_thread_fun, data[i]);
   }
 
-  FILE *f = fopen(tf->name, "a");
-  if (f == NULL) {
-    fprintf(stderr, "failed to open the file %s\n", tf->name);
+  for (size_t i = 0; i < num_threads; i++) {
+    pthread_join(thread_ids[i], NULL);
+    free_thread_data(data[i]);
+  }
+
+  if (!is_done(pp)) {
+    fprintf(stderr, "There are %lu pieces to be downloaded\n", get_num_undone_pieces(pp));
+    return false;
+  } else {
+    fprintf(stdout, "All %lu pieces have been downloaded\n", tf->num_pieces);
+  }
+
+  ok = write_to_file(df);
+  if (!ok) {
+    fprintf(stderr, "write_to_file failed\n");
     return false;
   }
-  DEFER({ fclose(f); });
-  for (size_t i = 0; i < tf->num_pieces; i++) {
-    int bytes_written = fwrite(pieces_buf[i], 1, tf->piece_length, f);
-    if (bytes_written != tf->piece_length) {
-      fprintf(stderr, "failed to write to file: written %d bytes, expected %lu\n", bytes_written,
-              tf->piece_length);
-      return false;
-    }
-    fprintf(stdout, "written %d bytes in %s\n", bytes_written, tf->name);
-  }
+  fprintf(stdout, "file successfully downloaded in %s\n", tf->name);
 
   return true;
 }

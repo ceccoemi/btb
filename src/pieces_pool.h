@@ -5,6 +5,7 @@
 
 #include "bitfield.h"
 
+// A thread-safe data structure to extract piece indexes.
 typedef struct pieces_pool
 {
   bitfield* current_bitfield;

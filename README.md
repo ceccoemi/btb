@@ -17,10 +17,7 @@ To compile and run the tests (with valgrind checks), `cd` into the root director
 
 To download a torrent file, run
 
-    btb <file.torrent>
-
-This project is still under development.
-For now it doesn't employ multi-threading properly.
+    btb <file .torrent>
 
 ## References
 

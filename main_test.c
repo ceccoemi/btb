@@ -4,6 +4,7 @@
 #include "bitfield_test.h"
 #include "client_test.h"
 #include "conn_test.h"
+#include "downloaded_file_test.h"
 #include "file_buf_test.h"
 #include "handshake_msg_test.h"
 #include "message_test.h"
@@ -34,6 +35,8 @@ int main(void)
 
   fprintf(stdout, "\ttest_read_file\n");
   test_read_file();
+  fprintf(stdout, "\ttest_write_file\n");
+  test_write_file();
 
   fprintf(stdout, "\ttest_lu_to_big_endian_4_bytes\n");
   test_lu_to_big_endian_4_bytes();
@@ -82,6 +85,9 @@ int main(void)
   test_send_data();
   fprintf(stdout, "\ttest_receive_data_with_timeout\n");
   test_receive_data_with_timeout();
+
+  fprintf(stdout, "\ttest_downloaded_file\n");
+  test_downloaded_file();
   */
 
   // This test tries to perform a full downloaded of a torrent file

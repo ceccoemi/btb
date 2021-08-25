@@ -1,5 +1,6 @@
 #include "file_buf.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,7 @@ file_buf *read_file(const char *fname)
 {
   FILE *f = fopen(fname, "rb");
   if (f == NULL) {
-    fprintf(stderr, "Error in opening the file %s\n", fname);
+    fprintf(stderr, "Error in opening the file %s: %s\n", fname, strerror(errno));
     return NULL;
   }
   DEFER({ fclose(f); });
@@ -27,6 +28,32 @@ file_buf *read_file(const char *fname)
     return NULL;
   }
   return buf;
+}
+
+file_buf *init_file_buf(char *data, size_t size)
+{
+  file_buf *fb = malloc(sizeof(file_buf));
+  fb->size = size;
+  fb->data = malloc(fb->size);
+  memcpy(fb->data, data, fb->size);
+  return fb;
+}
+
+bool write_file(file_buf *fb, const char *output_fname)
+{
+  FILE *f = fopen(output_fname, "w");
+  if (f == NULL) {
+    fprintf(stderr, "failed to open the file %s: %s\n", output_fname, strerror(errno));
+    return false;
+  }
+  DEFER({ fclose(f); });
+  int bytes_written = fwrite(fb->data, 1, fb->size, f);
+  if (bytes_written != fb->size) {
+    fprintf(stderr, "failed to write to file: written %d bytes, expected %lu\n", bytes_written,
+            fb->size);
+    return false;
+  }
+  return true;
 }
 
 void free_file_buf(file_buf *f)
